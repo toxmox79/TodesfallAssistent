@@ -1,14 +1,53 @@
 {
-  "schemaVersion": 2,
-  "templates": [
-    {"id":"vorsorge","file":"vorsorgevollmacht.pdf","title":"Vorsorgevollmacht","type":"local_fillable_template","source":"BMJ Informationen"},
-    {"id":"patienten","file":"patientenverfuegung.pdf","title":"Patientenverfügung","type":"local_fillable_template","source":"BMJ Textbausteine"},
-    {"id":"betreuung","file":"betreuungsverfuegung.pdf","title":"Betreuungsverfügung","type":"local_fillable_template","source":"BMJ Informationen"},
-    {"id":"bank","file":"bankvollmacht.pdf","title":"Bankvollmacht","type":"local_fillable_template"},
-    {"id":"schweigepflicht","file":"schweigepflichtentbindung.pdf","title":"Schweigepflichtentbindung","type":"local_fillable_template"},
-    {"id":"bestattung","file":"bestattungswuensche.pdf","title":"Bestattungswünsche","type":"local_fillable_template"},
-    {"id":"organe","file":"organspende-entscheidung.pdf","title":"Organspende-Entscheidung","type":"local_fillable_template","source":"Organspende-Register separat"},
-    {"id":"testament","file":"testament-vorbereitungsblatt.pdf","title":"Testament - Vorbereitungsblatt","type":"local_fillable_template","warning":"Kein Testament"},
-    {"id":"zvrP","file":"zvr-formular-p.pdf","title":"ZVR Formular P - Arbeitskopie","type":"local_fillable_workcopy","source":"ZVR Formular P, Stand 01.02.2024"}
+  "version": "0.6.4",
+  "checked": "2026-09-28",
+  "forms": [
+    {
+      "file": "vorsorgevollmacht.pdf",
+      "type": "official-structure",
+      "source": "BMJ",
+      "stand": "Januar 2023"
+    },
+    {
+      "file": "betreuungsverfuegung.pdf",
+      "type": "official-structure",
+      "source": "BMJ",
+      "stand": "Januar 2023"
+    },
+    {
+      "file": "bankvollmacht.pdf",
+      "type": "official-structure",
+      "source": "BMJ/Deutsche Kreditwirtschaft"
+    },
+    {
+      "file": "zvr-formular-p.pdf",
+      "type": "official-structure",
+      "source": "Zentrales Vorsorgeregister",
+      "stand": "01.02.2024"
+    },
+    {
+      "file": "organspende-entscheidung.pdf",
+      "type": "official-structure",
+      "source": "BIÖG",
+      "stand": "2025"
+    },
+    {
+      "file": "patientenverfuegung.pdf",
+      "type": "official-text-modules",
+      "source": "BMJ",
+      "note": "Kein einheitliches amtliches Formular"
+    },
+    {
+      "file": "schweigepflichtentbindung.pdf",
+      "type": "app-template"
+    },
+    {
+      "file": "bestattungswuensche.pdf",
+      "type": "app-template"
+    },
+    {
+      "file": "testament-vorbereitungsblatt.pdf",
+      "type": "app-template"
+    }
   ]
 }
