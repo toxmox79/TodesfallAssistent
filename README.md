@@ -1,31 +1,17 @@
-# Sterbefall Assistent Deutschland – MVP
+# Sterbefall Assistent Deutschland – Multi-Person Vorsorge
 
-Eine installierbare, local-first PWA ohne Cloud-Zwang und ohne Build-Schritt.
+Local-first PWA. Version 0.2 erweitert die Vorsorge um mehrere Personen/Angehörige.
 
-## Enthalten
-- Mobile UI im türkis/gelben Stil des Mockups
-- Local-first Speicherung per IndexedDB
-- Stammdaten nur einmal erfassen
-- Automatische Datenübernahme in Schreiben
-- Vorsorge-Fortschritt
-- Dokumentstatus (Vorsorgevollmacht, Patientenverfügung, etc.)
-- Notfallkarte
-- Sterbefall-Fallakte
-- Generator für Sterbefall-Mitteilungen/Kündigungen
-- Offline-Funktion via Service Worker
-- Installierbar als PWA
+## Neu
+- Personen innerhalb von **Vorsorge** anlegen, bearbeiten, löschen und auswählen
+- eigener Vorsorgefortschritt je Person
+- eigene Stammdaten, Dokumentstatus und Notfallkontakt je Person
+- Sterbefall kann einer vorhandenen Person zugeordnet werden
+- bestehende Daten aus der alten Ein-Person-Version werden beim ersten Start automatisch als Person „Ich“ übernommen
+- Service-Worker Cache auf v2 angehoben
 
-## Start
-Einfach über einen lokalen Webserver starten, z. B.:
-
+## Lokal starten
 ```bash
 python -m http.server 8080
 ```
-
-Dann im Browser öffnen:
-`http://localhost:8080`
-
-Wichtig: Für Service Worker/PWA ist `http://localhost` oder HTTPS nötig.
-
-## Datenschutz
-Die MVP-Version speichert Daten ausschließlich lokal im Browser. Eine zusätzliche Verschlüsselung sensibler Daten ist für die nächste Ausbaustufe vorgesehen.
+Dann `http://localhost:8080` öffnen.

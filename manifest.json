@@ -1,10 +1,1 @@
-{
-  "name":"Sterbefall Assistent Deutschland",
-  "short_name":"Sterbefall",
-  "start_url":"./",
-  "display":"standalone",
-  "background_color":"#ffffff",
-  "theme_color":"#12b89f",
-  "description":"Local-first Vorsorge- und Sterbefall-Assistent für Deutschland",
-  "icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
-}
+{"name":"Sterbefall Assistent Deutschland","short_name":"Sterbefall Assistent","start_url":"./","display":"standalone","background_color":"#ffffff","theme_color":"#11b79e","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
