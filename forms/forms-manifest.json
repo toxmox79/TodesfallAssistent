@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "templates": [
+    {
+      "id": "vorsorge",
+      "file": "vorsorgevollmacht-bmj.pdf",
+      "title": "Formular: Vorsorgevollmacht",
+      "issuer": "Bundesministerium der Justiz",
+      "stand": "15.01.2023",
+      "source": "https://www.bmj.de/SharedDocs/Downloads/DE/Formular/Vorsorgevollmacht.html"
+    },
+    {
+      "id": "betreuung",
+      "file": "betreuungsverfuegung-bmj.pdf",
+      "title": "Formular: Betreuungsverfügung",
+      "issuer": "Bundesministerium der Justiz",
+      "stand": "01.01.2023",
+      "source": "https://www.bmj.de/SharedDocs/Downloads/DE/Formular/Betreuungsverfuegung.html"
+    },
+    {
+      "id": "zvrP",
+      "file": "zvr-formular-p.pdf",
+      "title": "Formular P",
+      "issuer": "Zentrales Vorsorgeregister / Bundesnotarkammer",
+      "stand": "01.02.2024",
+      "source": "https://www.vorsorgeregister.de/formulare"
+    }
+  ]
+}
