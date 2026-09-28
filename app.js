@@ -1,6 +1,6 @@
 const DB_NAME='sterbefall_assistent_db', DB_VERSION=6;
 let db;
-const state={route:'welcome',persons:[],activePersonId:null,cases:[],settings:{simpleMode:true},editPersonId:null,docKey:null,officialPdfKey:null,lastPdf:null};
+const state={route:'welcome',persons:[],activePersonId:null,cases:[],settings:{simpleMode:true},editPersonId:null,docKey:null,officialPdfKey:null,lastPdf:null,applicationTaskId:null};
 
 const OFFICIAL={
   vorsorge:'https://www.bmj.de/SharedDocs/Downloads/DE/Formular/Vorsorgevollmacht.html',
@@ -62,8 +62,8 @@ function completion(p=activePerson()){
 function appTop(title,sub=''){return `<div class="topbar"><button class="cta ghost back-btn" onclick="back()">‹</button><div class="grow"><h1>${esc(title)}</h1>${sub?`<div class="sub">${esc(sub)}</div>`:''}</div></div>`}
 const nav=()=>`<nav class="bottom-nav no-print"><button class="nav-btn ${state.route==='home'?'active':''}" onclick="go('home')"><span class="ni">⌂</span>Start</button><button class="nav-btn ${['documents','document-detail'].includes(state.route)?'active':''}" onclick="go('documents')"><span class="ni">▤</span>Dokumente</button><button class="nav-btn ${state.route==='case'?'active':''}" onclick="go('case')"><span class="ni">◷</span>Sterbefall</button><button class="nav-btn ${['profile','backup'].includes(state.route)?'active':''}" onclick="go('profile')"><span class="ni">●</span>Profil</button></nav>`;
 function go(r){state.route=r;render();window.scrollTo(0,0)}
-function back(){const map={'person-edit':'vorsorge','vorsorge-person':'vorsorge','profile':'vorsorge-person','trusted':'vorsorge-person','documents':'vorsorge-person','document-detail':'documents','form-fill':'document-detail','official-pdf':state.officialPdfKey==='zvrP'?'zvr':'document-detail','medical':'vorsorge-person','zvr':'vorsorge-person','bestattung':'vorsorge-person','digital':'vorsorge-person','serious':'home','case':'home','generator':'case','backup':'profile'};go(map[state.route]||'home')}
-function render(){const a=document.getElementById('app');let html='';const r=state.route;if(r==='welcome')html=welcome();else if(r==='home')html=home()+nav();else if(r==='vorsorge')html=vorsorgePeople()+nav();else if(r==='vorsorge-person')html=vorsorgePerson()+nav();else if(r==='person-edit')html=personEdit()+nav();else if(r==='profile')html=profile()+nav();else if(r==='trusted')html=trusted()+nav();else if(r==='documents')html=documents()+nav();else if(r==='document-detail')html=documentDetail()+nav();else if(r==='form-fill')html=formFill()+nav();else if(r==='official-pdf')html=officialPdfScreen()+nav();else if(r==='medical')html=medical()+nav();else if(r==='zvr')html=zvr()+nav();else if(r==='bestattung')html=bestattung()+nav();else if(r==='digital')html=digital()+nav();else if(r==='emergency')html=emergency();else if(r==='serious')html=serious()+nav();else if(r==='case')html=caseScreen()+nav();else if(r==='generator')html=generator()+nav();else if(r==='backup')html=backup()+nav();a.innerHTML=html;}
+function back(){const map={'person-edit':'vorsorge','vorsorge-person':'vorsorge','profile':'vorsorge-person','trusted':'vorsorge-person','documents':'vorsorge-person','document-detail':'documents','form-fill':'document-detail','official-pdf':state.officialPdfKey==='zvrP'?'zvr':'document-detail','medical':'vorsorge-person','zvr':'vorsorge-person','bestattung':'vorsorge-person','digital':'vorsorge-person','serious':'home','case':'home','application':'case','application-preview':'application','generator':'case','backup':'profile'};go(map[state.route]||'home')}
+function render(){const a=document.getElementById('app');let html='';const r=state.route;if(r==='welcome')html=welcome();else if(r==='home')html=home()+nav();else if(r==='vorsorge')html=vorsorgePeople()+nav();else if(r==='vorsorge-person')html=vorsorgePerson()+nav();else if(r==='person-edit')html=personEdit()+nav();else if(r==='profile')html=profile()+nav();else if(r==='trusted')html=trusted()+nav();else if(r==='documents')html=documents()+nav();else if(r==='document-detail')html=documentDetail()+nav();else if(r==='form-fill')html=formFill()+nav();else if(r==='official-pdf')html=officialPdfScreen()+nav();else if(r==='medical')html=medical()+nav();else if(r==='zvr')html=zvr()+nav();else if(r==='bestattung')html=bestattung()+nav();else if(r==='digital')html=digital()+nav();else if(r==='emergency')html=emergency();else if(r==='serious')html=serious()+nav();else if(r==='case')html=caseScreen()+nav();else if(r==='application')html=applicationScreen()+nav();else if(r==='application-preview')html=applicationPreview()+nav();else if(r==='generator')html=generator()+nav();else if(r==='backup')html=backup()+nav();a.innerHTML=html;}
 function noPerson(title){return `<section class="screen">${appTop(title)}<div class="content"><div class="empty-card"><div class="empty-icon">👥</div><h3>Noch keine Person ausgewählt</h3><p>Lege in der Vorsorge zuerst eine Person an.</p><button class="cta teal full" onclick="go('vorsorge')">Zur Vorsorge</button></div></div></section>`}
 function personSwitch(p){return `<button class="person-switch" onclick="go('vorsorge')"><span>${relationEmoji(p.relation)} ${esc(personName(p))}</span><small>${esc(relationLabel(p.relation))} · Person wechseln</small></button>`}
 function field(label,key,val='',type='text',hint=''){return `<div class="field"><label>${esc(label)}</label><input type="${type}" id="${key}" value="${esc(val||'')}" />${hint?`<small>${esc(hint)}</small>`:''}</div>`}
@@ -240,6 +240,9 @@ function zvr(){const p=activePerson();if(!p)return noPerson('Zentrales Vorsorger
 <button class="cta teal full" onclick="saveZvr()">Speichern</button><button class="cta teal full mt10" onclick="saveZvr().then(()=>openOfficialPdf('zvrP'))">📄 Formular P automatisch befüllen</button><div class="row mt10"><button class="cta ghost full" onclick="openOfficial('zvr')">Online registrieren ↗</button><button class="cta ghost full" onclick="openOfficial('zvrForms')">Formulare ↗</button></div><div class="notice" style="margin-top:14px">Die Registrierung ersetzt das eigentliche Vorsorgedokument nicht. Für jede vorsorgende Person ist eine eigene Registrierung erforderlich.</div></div></section>`}
 async function saveZvr(){const p=activePerson();p.zvr={registered:checked('zvrRegistered'),date:val('zvrDate'),reference:val('zvrRef'),storageType:val('zvrStorageType'),storageLocation:val('zvrStorage'),storageInstitution:val('zvrStorageInstitution'),storageStreet:val('zvrStorageStreet'),storageCity:val('zvrStorageCity'),paymentMethod:val('zvrPayment'),iban:val('zvrIban'),accountHolder:val('zvrAccountHolder'),contactId:val('zvrContact'),trustRole:val('zvrTrustRole'),trustGuardian:checked('zvrTrustGuardian')};await persistPersons();toast('ZVR-Daten gespeichert');}
 
+function bestattung(){const p=activePerson();if(!p)return noPerson('Bestattungswünsche');const b=p.bestattung||{};return `<section class="screen">${appTop('Bestattungswünsche',`Für ${personName(p)}`)}<div class="content">${personSwitch(p)}<div class="notice"><b>Hinweis:</b> Für Bestattungswünsche gibt es kein bundeseinheitliches amtliches Standardformular. Die Angaben dienen der persönlichen Vorsorge und Orientierung für Angehörige.</div><div class="form-card"><h3>Bestattungswünsche</h3>${selectField('Bestattungsart','funeralType',b.type||'',['|Noch offen','Erdbestattung','Feuerbestattung','Seebestattung','Baumbestattung','Andere'])}${field('Gewünschter Friedhof / Ort','funeralPlace',b.place||'')}${field('Bestatter / Vorsorgevertrag','funeralUndertaker',b.undertaker||'')}${textareaField('Trauerfeier, Musik, Blumen, Kleidung, Anzeigen','funeralCeremony',b.ceremony||'')}${textareaField('Weitere Wünsche','funeralNotes',b.notes||'')}</div><button class="cta teal full" onclick="saveBestattung()">Speichern</button><button class="cta ghost full mt10" onclick="openDoc('bestattung')">Dokument & unterschriebene Fassung verwalten</button></div></section>`}
+async function saveBestattung(){const p=activePerson();if(!p)return;p.bestattung={type:val('funeralType'),place:val('funeralPlace'),undertaker:val('funeralUndertaker'),ceremony:val('funeralCeremony'),notes:val('funeralNotes')};await persistPersons();toast('Bestattungswünsche gespeichert');render()}
+
 function digital(){const p=activePerson();if(!p)return noPerson('Digitaler Nachlass');const d=p.digital||{};return `<section class="screen">${appTop('Digitaler Nachlass',`Für ${personName(p)}`)}<div class="content"><div class="notice"><b>Keine Passwörter im Klartext speichern.</b> Dokumentiere stattdessen, wo ein Passwortmanager, Notfallzugang oder versiegelte Zugangsliste zu finden ist.</div><div class="form-card"><h3>Vertrauensperson</h3>${field('Verantwortliche Person','digitalContact',d.contactName)}${field('Telefon / Kontakt','digitalContactPhone',d.contactPhone)}${field('Ort der Zugangsinformationen','digitalStorage',d.storageLocation,'text','Zum Beispiel: Passwortmanager mit Notfallzugriff, versiegelter Umschlag im Tresor.')}</div><div class="form-card"><h3>Konten & Geräte</h3>${textareaField('Wichtige Dienste','digitalServices',d.services,'Zum Beispiel E-Mail, Apple/Google, Social Media, PayPal, Domains, Cloudspeicher.')}${textareaField('Geräte / Zugangshinweise','digitalDevices',d.devices,'Nur Hinweise, keine PINs oder Passwörter.')}${textareaField('Wünsche','digitalWishes',d.wishes,'Konten löschen, memorialisieren, Daten sichern, Domains übertragen …')}</div><button class="cta teal full" onclick="saveDigital()">Speichern</button></div></section>`}
 async function saveDigital(){const p=activePerson();p.digital={contactName:val('digitalContact'),contactPhone:val('digitalContactPhone'),storageLocation:val('digitalStorage'),services:val('digitalServices'),devices:val('digitalDevices'),wishes:val('digitalWishes')};await persistPersons();toast('Digitaler Nachlass gespeichert');render()}
 
@@ -247,12 +250,480 @@ function emergency(){const p=activePerson();if(!p)return noPerson('Notfallkarte'
 
 function serious(){const p=activePerson();if(!p)return noPerson('Schwere Erkrankung');normalizePerson(p);const tasks=[['Patientenverfügung auffindbar?',isDocDone(p,'patienten'),'documents'],['Vorsorgevollmacht vorhanden?',isDocDone(p,'vorsorge'),'documents'],['Vertrauenspersonen erreichbar?',(p.contacts||[]).length>0,'trusted'],['Hausarzt / Behandler hinterlegt?',!!p.medical?.doctorName,'medical'],['Medikamentenplan und Hinweise geklärt?',!!p.medical?.medPlan||!!p.medical?.medications,'medical'],['Bestattungswünsche bei Bedarf besprochen?',!!p.bestattung?.type||!!p.bestattung?.notes,'bestattung']];return `<section class="screen">${appTop('Schwere Erkrankung',`Für ${personName(p)}`)}<div class="content">${personSwitch(p)}<div class="notice"><b>Dieser Bereich ist eine Organisationshilfe.</b> Akute medizinische Beschwerden gehören in professionelle medizinische Versorgung; im Notfall 112.</div><div class="section-title"><h2>Jetzt prüfen</h2></div><div class="list">${tasks.map(t=>task(t[0],t[1],t[1]?'Erledigt / hinterlegt':'Noch offen',t[2])).join('')}</div><div class="form-card mt16"><h3>Gesprächs- und Organisationspunkte</h3><ul class="plain-list"><li>Wer soll medizinische Gespräche begleiten?</li><li>Wo liegen Vollmachten und Originaldokumente?</li><li>Welche Pflege- oder Unterstützungsangebote werden benötigt?</li><li>Welche Verträge, Haustiere, Kinder oder laufenden Verpflichtungen müssen organisiert werden?</li><li>Wer soll informiert werden, wenn sich die Situation verschlechtert?</li></ul></div></div></section>`}
 
-function caseScreen(){const current=state.cases[0]||{},opts=state.persons.map(p=>`<option value="${p.id}" ${current.personId===p.id?'selected':''}>${esc(personName(p))} – ${esc(relationLabel(p.relation))}</option>`).join('');return `<section class="screen">${appTop('Sterbefall','Geführte Fallakte')}<div class="content"><div class="form-card"><h3>Fall</h3><div class="field"><label>Person</label><select id="casePerson"><option value="">Bitte auswählen</option>${opts}</select></div>${field('Sterbedatum','cDeath',current.deathDate,'date')}${selectField('Sterbeort','cPlace',current.place||'',['|Bitte auswählen','Zuhause','Krankenhaus','Pflegeheim','Hospiz','Ausland','Sonstiges'])}<button class="cta teal full" onclick="saveCase()">Fall speichern / aktualisieren</button></div>${current.personId?caseDashboard(current):'<div class="empty-card"><div class="empty-icon">🕯️</div><h3>Noch kein Fall angelegt</h3><p>Wähle eine bereits vorhandene Person aus. Stammdaten werden automatisch übernommen.</p></div>'}</div></section>`}
-function caseDashboard(c){const p=state.persons.find(x=>x.id===c.personId);if(!p)return '';const done=c.tasks||{};const phases=[['first','Sofort / heute'],['week','Erste Tage'],['estate','Nachlass & Verträge'],['later','Später']];const items={first:[['doctor','Ärztliche Feststellung / Todesbescheinigung klären'],['relatives','Nahe Angehörige informieren'],['undertaker','Bestatter auswählen / informieren']],week:[['cert','Sterbeurkunden organisieren'],['employer','Arbeitgeber / Rentenstelle informieren'],['health','Krankenkasse informieren'],['insurance','Versicherungen prüfen']],estate:[['will','Testament / Nachlassgericht prüfen'],['bank','Banken und Konten klären'],['home','Wohnung / Immobilie sichern'],['contracts','Verträge und Abos erfassen']],later:[['tax','Steuerliche Themen prüfen'],['digital','Digitalen Nachlass bearbeiten'],['archive','Unterlagen und Fallakte abschließen']]};return `<div class="case-hero"><small>Fallakte</small><h2>${esc(personName(p))}</h2><div>${c.deathDate?`† ${fmtDate(c.deathDate)}`:''}${c.place?` · ${esc(c.place)}`:''}</div></div>${phases.map(([pk,label])=>`<div class="section-title"><h2>${label}</h2></div><div class="list">${items[pk].map(([id,label2])=>caseTask(id,label2,!!done[id])).join('')}</div>`).join('')}<button class="cta ghost full mt16" onclick="go('generator')">✍ Schreiben aus Falldaten erstellen</button>`}
-function caseTask(id,label,done){return `<button class="list-item ${done?'done':''}" onclick="toggleCaseTask('${id}')"><div class="dot">${done?'✓':''}</div><div class="grow"><b>${esc(label)}</b><div class="meta">${done?'Erledigt':'Antippen zum Abhaken'}</div></div></button>`}
-async function saveCase(){const personId=val('casePerson');if(!personId){toast('Bitte Person auswählen');return}const old=state.cases[0]||{};state.cases=[{...old,id:old.id||uid('case'),personId,deathDate:val('cDeath'),place:val('cPlace'),tasks:old.tasks||{}}];await idbSet('cases','main',state.cases);toast('Fall gespeichert');render()}
-async function toggleCaseTask(id){const c=state.cases[0];if(!c)return;c.tasks=c.tasks||{};c.tasks[id]=!c.tasks[id];await idbSet('cases','main',state.cases);render()}
 
+
+const APPLICATIONS={
+  sterbevierteljahr:{
+    title:'Vorschuss für das Sterbevierteljahr',
+    short:'Sterbevierteljahr',
+    authority:'Renten Service der Deutschen Post',
+    officialForm:'Änderungsanzeige und Anträge im Renten Service – Teil 7',
+    sourceStand:'Deutsche Post, Stand 03/2026',
+    online:'https://www.deutschepost.de/de/r/rentenservice/downloadcenter.html',
+    pdf:'https://www.deutschepost.de/dam/jcr:ccb44b2b-ade2-4956-975a-6b6627f5e17f/dp-rs-aenderungsformular-rentenservice.pdf',
+    note:'Für Ehe- oder Lebenspartner. Der schnelle Vorschuss wird beim Renten Service beantragt; der reguläre Antrag auf Witwen-/Witwerrente bei der Deutschen Rentenversicherung bleibt zusätzlich erforderlich.'
+  },
+  widowPension:{
+    title:'Witwen-/Witwerrente',
+    short:'Hinterbliebenenrente',
+    authority:'Deutsche Rentenversicherung',
+    officialForm:'R0500 – Antrag auf Hinterbliebenenrente',
+    sourceStand:'R0500 Version 33, Stand 01.07.2026',
+    online:'https://www.eservice-drv.de/eantrag/hinweis-ohne-karte-direkt.seam?formular=r0500',
+    pdf:'https://www.deutsche-rentenversicherung.de/SharedDocs/Formulare/DE/_pdf/R0500.pdf?__blob=publicationFile',
+    note:'Die App bereitet die häufig benötigten Kernangaben vor. Das offizielle R0500 enthält zusätzliche individuelle Fragen, insbesondere zu Versicherungszeiten, Einkommen und Sonderfällen.'
+  },
+  orphanPension:{
+    title:'Halb-/Vollwaisenrente',
+    short:'Waisenrente',
+    authority:'Deutsche Rentenversicherung',
+    officialForm:'R0500 plus Anlage R0610',
+    sourceStand:'R0500 / R0610',
+    online:'https://www.eservice-drv.de/eantrag/hinweis-ohne-karte-direkt.seam?formular=r0500',
+    pdf:'https://www.deutsche-rentenversicherung.de/SharedDocs/Formulare/DE/_pdf/R0610.pdf?__blob=publicationFile',
+    note:'Für einen Erstantrag wird der Antrag auf Hinterbliebenenrente R0500 zusammen mit der Anlage R0610 benötigt. Bei bereits gezahlter Waisenrente können andere Formulare einschlägig sein.'
+  },
+  funeralCosts:{
+    title:'Übernahme erforderlicher Bestattungskosten',
+    short:'Bestattungskosten § 74 SGB XII',
+    authority:'Zuständiges Sozialamt',
+    officialForm:'Kein bundeseinheitliches Formular',
+    sourceStand:'§ 74 SGB XII',
+    online:'https://www.gesetze-im-internet.de/sgb_12/__74.html',
+    pdf:'',
+    note:'Die Formulare unterscheiden sich je nach Sozialamt. Die App erstellt deshalb einen vollständigen Antragsdatensatz und ein druckbares Anschreiben, das zusammen mit einem örtlichen Formular verwendet werden kann.'
+  }
+};
+
+function applicationSupported(id){return !!APPLICATIONS[id]}
+function openApplication(id){
+  if(!APPLICATIONS[id]){toast('Für diesen Punkt ist noch kein Antragsassistent hinterlegt');return}
+  state.applicationTaskId=id;go('application')
+}
+function currentCase(){return state.cases[0]||null}
+function deceasedForCase(c=currentCase()){return c?state.persons.find(p=>p.id===c.personId)||null:null}
+function appStore(c,id){c.applications=c.applications||{};c.applications[id]=c.applications[id]||{};return c.applications[id]}
+function personAddress(p){const x=p?.profile||{};return [x.street,[x.zip,x.city].filter(Boolean).join(' '),x.country&&x.country!=='Deutschland'?x.country:''].filter(Boolean).join(', ')}
+function personSelectOptions(selected='',filterFn=null){return state.persons.filter(p=>!filterFn||filterFn(p)).map(p=>`<option value="${p.id}" ${p.id===selected?'selected':''}>${esc(personName(p))} – ${esc(relationLabel(p.relation))}</option>`).join('')}
+function defaultApplicant(c,id){
+  const dead=deceasedForCase(c);
+  if(!dead)return state.persons.find(p=>p.relation==='self'&&p.id!==c?.personId)?.id||'';
+  const others=state.persons.filter(p=>p.id!==dead.id);
+  if(id==='sterbevierteljahr'||id==='widowPension')return others.find(p=>p.relation==='partner')?.id||others.find(p=>p.relation==='self')?.id||others[0]?.id||'';
+  if(id==='orphanPension')return others.find(p=>p.relation==='child')?.id||others[0]?.id||'';
+  return others.find(p=>p.relation==='self')?.id||others[0]?.id||'';
+}
+function applicationApplicant(c,id,data){return state.persons.find(p=>p.id===(data?.applicantId||defaultApplicant(c,id)))||null}
+function applicantAutofillCard(p){
+  if(!p)return `<div class="notice">Noch keine antragstellende Person gewählt.</div>`;
+  const x=p.profile||{};
+  return `<div class="autofill-card"><div><b>${esc(personName(p))}</b><div class="small muted">${esc(personAddress(p)||'Adresse noch nicht vollständig')} · ${esc(x.phone||'Telefon fehlt')}</div></div><span>✓ Stammdaten</span></div>`;
+}
+function sharedApplicantFields(p,data={}){
+  const x=p?.profile||{},fin=p?.finance||{};
+  return `<div class="form-card"><h3>Antragstellende Person</h3>${applicantAutofillCard(p)}
+    <div class="two">${field('Telefon','appPhone',data.phone??x.phone??'','tel')}${field('E-Mail','appEmail',data.email??x.email??'','email')}</div>
+    <div class="two">${field('Rentenversicherungsnummer','appPensionNo',data.pensionNo??x.pensionNo??'')}${field('Steuer-ID','appTaxId',data.taxId??x.taxId??'')}</div>
+    ${field('Krankenkasse','appHealthInsurance',data.healthInsurance??x.healthInsurance??'')}
+  </div>
+  <div class="form-card"><h3>Zahlungsweg</h3>
+    ${field('IBAN','appIban',data.iban??fin.iban??'')}
+    <div class="two">${field('Geldinstitut','appBankName',data.bankName??fin.bankName??'')}${field('Kontoinhaber/in','appAccountHolder',data.accountHolder??fin.accountHolder??personName(p))}</div>
+    <label class="checkline"><input type="checkbox" id="saveFinance" checked> Zahlungsdaten bei dieser Person für weitere Anträge merken</label>
+  </div>`;
+}
+function attachmentChecks(data,items){
+  const have=data.attachments||{};
+  return `<div class="form-card"><h3>Unterlagen-Checkliste</h3>${items.map(([k,l])=>`<label class="checkline"><input type="checkbox" id="att_${k}" ${have[k]?'checked':''}> ${esc(l)}</label>`).join('')}</div>`;
+}
+function applicationCompleteness(id,c,data,applicant){
+  const dead=deceasedForCase(c),dx=dead?.profile||{},ax=applicant?.profile||{};
+  let vals=[];
+  if(id==='sterbevierteljahr')vals=[dead?.id,c?.deathDate,dx.pensionNo||data.postPensionNo,applicant?.id,data.marriageDate,data.iban||applicant?.finance?.iban];
+  if(id==='widowPension')vals=[dead?.id,c?.deathDate,dx.pensionNo,applicant?.id,ax.birthDate,data.marriageDate,data.iban||applicant?.finance?.iban,data.taxId||ax.taxId,data.healthInsurance||ax.healthInsurance];
+  if(id==='orphanPension')vals=[dead?.id,c?.deathDate,dx.pensionNo,applicant?.id,ax.birthDate,data.childRelationship,data.iban||applicant?.finance?.iban];
+  if(id==='funeralCosts')vals=[dead?.id,c?.deathDate,applicant?.id,data.socialOffice,data.funeralCostTotal,data.reason];
+  const complete=vals.filter(Boolean).length,total=vals.length;
+  return {complete,total,pct:total?Math.round(complete/total*100):0};
+}
+function applicationProgress(id,c,data,applicant){
+  const q=applicationCompleteness(id,c,data,applicant);
+  return `<div class="application-progress"><div><b>${q.pct}%</b><span>Kernangaben vorbereitet</span></div><progress max="100" value="${q.pct}"></progress><small>${q.complete} von ${q.total} Kernangaben vorhanden</small></div>`;
+}
+const DEATH_TASKS={
+  doctor:{
+    phase:'first',title:'Ärztliche Feststellung / Todesbescheinigung',kind:'Dokument',
+    urgency:'sofort',where:'Arzt bzw. ärztlicher Dienst; bei ungeklärtem oder nicht natürlichem Tod gelten besondere Abläufe.',
+    info:'Die Todesbescheinigung ist Grundlage für die Beurkundung beim Standesamt. Im Krankenhaus oder Pflegeheim wird der Ablauf in der Regel von der Einrichtung angestoßen.',
+    docs:['Personalausweis der verstorbenen Person, soweit verfügbar','ggf. medizinische Unterlagen'],
+    links:[]
+  },
+  undertaker:{
+    phase:'first',title:'Bestatter beauftragen',kind:'Organisation',urgency:'zeitnah',
+    where:'Bestattungsunternehmen deiner Wahl.',
+    info:'Der Bestatter kann häufig die Anzeige beim Standesamt, Sterbeurkunden und die Vorschusszahlung für das Sterbevierteljahr mit vorbereiten.',
+    docs:['Personalausweis','Personenstandsurkunden','Todesbescheinigung'],links:[]
+  },
+  cert:{
+    phase:'first',title:'Sterbeurkunden beantragen',kind:'Antrag',urgency:'frühzeitig',
+    where:'Standesamt des Sterbeortes. Krankenhäuser, Pflegeeinrichtungen oder Bestatter übernehmen häufig die Sterbefallanzeige.',
+    info:'Sterbeurkunden werden später unter anderem für Renten-, Versicherungs-, Bank- und Nachlassangelegenheiten benötigt.',
+    docs:['je nach Fall Todesbescheinigung','Personalausweis','Geburts-/Heiratsurkunde oder weitere Personenstandsurkunden'],
+    links:[['Bundesportal: Sterbeurkunde','https://verwaltung.bund.de/leistungsverzeichnis/de/leistung/99000000007397']]
+  },
+  sterbevierteljahr:{
+    phase:'benefits',title:'Vorschuss Sterbevierteljahr beantragen',kind:'Antrag',urgency:'30 Tage',
+    where:'Renten Service der Deutschen Post, ggf. über das Bestattungsinstitut.',
+    info:'Das ist nicht einfach die Rente des Verstorbenen. Es ist ein Vorschuss auf die Witwen-/Witwerrente. Wenn der verstorbene Ehe- oder Lebenspartner bereits eine gesetzliche Rente bezog, kann der hinterbliebene Ehe-/Lebenspartner innerhalb von 30 Tagen einen Vorschuss beantragen. Er entspricht grundsätzlich dem Dreifachen der für den Sterbemonat gezahlten Monatsrente. Zusätzlich muss anschließend der formelle Antrag auf Witwen-/Witwerrente bei der Deutschen Rentenversicherung gestellt werden.',
+    docs:['Original der Sterbeurkunde mit Ehe-/Lebenspartnerangabe','Bankverbindung (IBAN)','Angaben zum verstorbenen Rentenbezieher','Tag der Eheschließung / Lebenspartnerschaft'],
+    links:[['Deutsche Post: Formular & Hinweise','https://www.deutschepost.de/de/r/rentenservice/downloadcenter.html'],['DRV: Erklärung Sterbevierteljahr','https://www.deutsche-rentenversicherung.de/SharedDocs/Glossareintraege/DE/S/sterbevierteljahr']]
+  },
+  widowPension:{
+    phase:'benefits',title:'Witwen-/Witwerrente beantragen',kind:'Antrag',urgency:'zeitnah',
+    where:'Deutsche Rentenversicherung; online per eAntrag, Beratungsstelle oder Versicherungsamt.',
+    info:'Die Hinterbliebenenrente wird nicht automatisch gezahlt. Der reguläre Antrag ist auch dann nötig, wenn bereits der Vorschuss für das Sterbevierteljahr beantragt wurde. Hinterbliebenenrenten können grundsätzlich bis zu zwölf Kalendermonate rückwirkend gezahlt werden.',
+    docs:['Sterbeurkunde','Heirats-/Lebenspartnerschaftsurkunde','Bankverbindung','Krankenkasse','Steuer-ID','ggf. letzter Rentenbescheid des Verstorbenen','Angaben zu eigenem Einkommen'],
+    links:[['DRV: Antrag R0500','https://www.deutsche-rentenversicherung.de/SharedDocs/Formulare/DE/_pdf/R0500.html']]
+  },
+  orphanPension:{
+    phase:'benefits',title:'Halb-/Vollwaisenrente beantragen',kind:'Antrag',urgency:'zeitnah',
+    where:'Deutsche Rentenversicherung.',
+    info:'Kinder können Waisenrente erhalten. Für volljährige Waisen gelten zusätzliche Voraussetzungen, etwa Schule, Ausbildung, Studium oder bestimmte Freiwilligendienste. Für den Antrag werden R0500 und die Anlage R0610 verwendet.',
+    docs:['Geburts-/Abstammungsurkunde des Kindes','Sterbeurkunde','Steuer-ID','Bankverbindung','Krankenkasse','bei über 18-Jährigen ggf. Schul-/Ausbildungs-/Studiennachweis'],
+    links:[['DRV: Waisenrenten-Unterlagen','https://www.deutsche-rentenversicherung.de/DRV/DE/Beratung-und-Kontakt/Beratung-suchen-und-buchen/Welche-Unterlagen-werden-benoetigt/welche-unterlagen-werden-benoetigt_node'],['DRV: Anlage R0610','https://www.deutsche-rentenversicherung.de/SharedDocs/Formulare/DE/_pdf/R0610.pdf']]
+  },
+  educationPension:{
+    phase:'benefits',title:'Erziehungsrente prüfen / beantragen',kind:'Antrag',urgency:'prüfen',
+    where:'Deutsche Rentenversicherung.',
+    info:'Relevant insbesondere für Geschiedene, die nach dem Tod des früheren Ehe-/Lebenspartners ein Kind erziehen und die rentenrechtlichen Voraussetzungen erfüllen. Die Erziehungsrente wird aus der eigenen Versicherung gezahlt. Für einen rückwirkenden Beginn sollte der Antrag nicht unnötig verzögert werden.',
+    docs:['Sterbeurkunde des früheren Partners','Scheidungsurteil bzw. Nachweis der Auflösung','Geburtsurkunde des Kindes','eigene Versicherungsnummer','Einkommensnachweise'],
+    links:[['DRV: Infos zur Erziehungsrente','https://www.deutsche-rentenversicherung.de/DRV/DE/Ueber-uns-und-Presse/Presse/Meldungen/2026/260408-erziehungsrente-unterstuetzung-geschiedene'],['DRV: Anlage R0220','https://www.deutsche-rentenversicherung.de/SharedDocs/Formulare/DE/_pdf/R0220.html']]
+  },
+  accidentBenefits:{
+    phase:'benefits',title:'Leistungen der gesetzlichen Unfallversicherung beantragen',kind:'Antrag',urgency:'prüfen',
+    where:'Zuständige Berufsgenossenschaft oder Unfallkasse.',
+    info:'Wenn der Tod Folge eines Arbeitsunfalls, Wegeunfalls oder einer Berufskrankheit war, kommen Sterbegeld, Überführungskosten und Hinterbliebenenrenten in Betracht.',
+    docs:['Sterbeurkunde','Unterlagen zum Arbeits-/Wegeunfall oder zur Berufskrankheit','Nachweise über Bestattungskosten','Verwandtschafts-/Familiennachweise'],
+    links:[['DGUV: Leistungen an Hinterbliebene','https://www.dguv.de/de/reha_leistung/hinterbliebene/index.jsp']]
+  },
+  funeralCosts:{
+    phase:'benefits',title:'Übernahme von Bestattungskosten nach § 74 SGB XII prüfen',kind:'Antrag',urgency:'frühzeitig',
+    where:'Zuständiges Sozialamt.',
+    info:'Wenn die zur Bestattung verpflichtete Person die erforderlichen Bestattungskosten nicht zumutbar tragen kann, kann eine Kostenübernahme nach § 74 SGB XII in Betracht kommen.',
+    docs:['Bestattungsrechnung/Kostenvoranschlag','Nachweise zu Einkommen und Vermögen','Nachlassübersicht','Sterbeurkunde','Nachweis der Verpflichtung zur Kostentragung'],
+    links:[['Gesetz: § 74 SGB XII','https://www.gesetze-im-internet.de/sgb_12/__74.html']]
+  },
+  occupationalPension:{
+    phase:'benefits',title:'Betriebsrente / Zusatzversorgung: Hinterbliebenenleistung beantragen',kind:'Antrag',urgency:'prüfen',
+    where:'Ehemaliger Arbeitgeber, Pensionskasse, Direktversicherung, Zusatzversorgungskasse oder Versorgungsträger.',
+    info:'Bei betrieblicher Altersversorgung können Witwen-/Witwer- oder Waisenleistungen bestehen. Die Voraussetzungen hängen vom jeweiligen Versorgungssystem ab.',
+    docs:['Sterbeurkunde','Versorgungs-/Policennummer','Heirats-/Geburtsurkunden','Bankverbindung'],links:[]
+  },
+  civilService:{
+    phase:'benefits',title:'Witwen-/Waisengeld bei Beamtenversorgung prüfen',kind:'Antrag',urgency:'prüfen',
+    where:'Dienstherr bzw. zuständige Versorgungsstelle.',
+    info:'War die verstorbene Person Beamtin/Beamter oder Versorgungsempfänger, können beamtenrechtliche Hinterbliebenenleistungen in Betracht kommen. Zuständigkeit und Formulare hängen vom Dienstherrn ab.',
+    docs:['Sterbeurkunde','Heirats-/Geburtsurkunden','Versorgungsaktenzeichen','Bankverbindung'],links:[]
+  },
+  lifeInsurance:{
+    phase:'benefits',title:'Lebens-/Sterbegeldversicherung geltend machen',kind:'Leistung',urgency:'zeitnah',
+    where:'Jeweiliges Versicherungsunternehmen.',
+    info:'Versicherer verlangen häufig eine Sterbeurkunde und die Versicherungsunterlagen; bei Lebensversicherungen kann je nach Vertrag zusätzlich ein ärztlicher Nachweis verlangt werden.',
+    docs:['Sterbeurkunde','Versicherungsschein/Policennummer','Nachweis der Bezugsberechtigung','Bankverbindung'],links:[]
+  },
+  inheritanceReject:{
+    phase:'estate',title:'Erbausschlagung prüfen',kind:'Frist',urgency:'meist 6 Wochen',
+    where:'Nachlassgericht oder Amtsgericht am eigenen Wohnort; alternativ Notar.',
+    info:'Wer eine Erbschaft nicht annehmen möchte, muss sie ausdrücklich ausschlagen. Die Frist beträgt normalerweise sechs Wochen ab Kenntnis davon, dass und aus welchem Grund man Erbe ist. Ein einfacher Brief reicht nicht.',
+    docs:['Personalausweis/Reisepass','ggf. Schreiben des Nachlassgerichts','Angaben zum Erbfall'],
+    links:[['Justiz: Erbe ausschlagen','https://www.service.justiz.de/erbausschlagung']]
+  },
+  inheritanceCertificate:{
+    phase:'estate',title:'Erbschein nur bei Bedarf beantragen',kind:'Antrag',urgency:'kein fester Termin',
+    where:'Nachlassgericht am letzten gewöhnlichen Aufenthalt der verstorbenen Person.',
+    info:'Ein Erbschein ist nicht immer nötig. Er dient als Nachweis der Erbenstellung, z. B. wenn kein ausreichender anderer Erbnachweis vorliegt. Er kostet Gebühren und sollte daher nicht vorschnell beantragt werden.',
+    docs:['Personalausweis','Sterbeurkunde','Personenstandsurkunden','ggf. Testament/Erbvertrag bzw. Angaben zur gesetzlichen Erbfolge'],
+    links:[['Justiz: Erbschein-Wegweiser','https://www.service.justiz.de/erbschein']]
+  },
+  inheritanceTax:{
+    phase:'estate',title:'Erwerb beim Erbschaftsteuer-Finanzamt anzeigen',kind:'Meldung',urgency:'3 Monate',
+    where:'Für die Erbschaftsteuer zuständiges Finanzamt.',
+    info:'Ein erbschaftsteuerpflichtiger Erwerb ist grundsätzlich innerhalb von drei Monaten nach Kenntnis anzuzeigen. Es gibt Ausnahmen, etwa wenn ein deutsches Gericht oder ein Notar eine Verfügung von Todes wegen eröffnet hat; bei Grundbesitz, Betriebsvermögen oder bestimmten weiteren Vermögenswerten können Ausnahmen wiederum nicht greifen.',
+    docs:['Angaben zu Erblasser und Erwerber','Todestag/Sterbeort','Art und Wert des Erwerbs','Verwandtschaftsverhältnis','frühere Zuwendungen'],
+    links:[['Gesetz: § 30 ErbStG','https://www.gesetze-im-internet.de/erbstg_1974/__30.html'],['Justiz: Nachlass regeln','https://service.justiz.de/nachlass']]
+  },
+  landRegister:{
+    phase:'estate',title:'Grundbuch nach Erbfall berichtigen',kind:'Antrag',urgency:'innerhalb 2 Jahren günstig',
+    where:'Zuständiges Grundbuchamt.',
+    info:'Bei geerbtem Grundbesitz sollte das Grundbuch berichtigt werden. Für die Eintragung der Erben wird keine Grundbuchgebühr erhoben, wenn der ordnungsgemäße Antrag innerhalb von zwei Jahren seit dem Erbfall eingeht.',
+    docs:['Erbnachweis, z. B. Erbschein oder geeignete notarielle Verfügung von Todes wegen','Antrag auf Grundbuchberichtigung'],
+    links:[['Bayerische Justiz: Grundbuchberichtigung nach Erbfall','https://www.justiz.bayern.de/gerichte-und-behoerden/amtsgerichte/muenchen/verfahren_08.php']]
+  },
+  familyBenefits:{
+    phase:'later',title:'Kindergeld / Kinderzuschlag neu zuordnen oder Änderungen melden',kind:'Antrag/Meldung',urgency:'prüfen',
+    where:'Familienkasse.',
+    info:'Wenn die verstorbene Person Kindergeld oder Kinderzuschlag bezogen hat oder sich die Haushalts- und Einkommensverhältnisse geändert haben, sollte die Familienkasse direkt informiert werden. Ggf. ist ein neuer Antrag durch die nun berechtigte Person nötig.',
+    docs:['Kindergeldnummer','Sterbeurkunde','Steuer-IDs','Bankverbindung','ggf. Einkommensnachweise'],
+    links:[['Familienkasse: Veränderungen mitteilen','https://www.arbeitsagentur.de/familie-und-kinder/veraenderungen-mitteilen'],['Kindergeld-Antrag/Formulare','https://www.arbeitsagentur.de/familie-und-kinder/downloads-familie-und-kinder/formulare-kindergeld']]
+  },
+  housingBenefits:{
+    phase:'later',title:'Wohngeld / Bürgergeld / Grundsicherung neu prüfen',kind:'Antrag',urgency:'bei Einkommensänderung',
+    where:'Je nach Leistung Wohngeldstelle, Jobcenter oder Sozialamt.',
+    info:'Durch den Tod kann sich das Haushaltseinkommen erheblich ändern. Bestehende Leistungen müssen ggf. angepasst werden; ein neuer Anspruch kann entstehen. Diese Prüfung ist individuell.',
+    docs:['Einkommens- und Vermögensnachweise','Miet-/Wohnkosten','Sterbeurkunde','Bescheide bestehender Leistungen'],links:[]
+  },
+  health:{
+    phase:'later',title:'Krankenkasse / Pflegekasse informieren',kind:'Meldung',urgency:'zeitnah',
+    where:'Krankenkasse der verstorbenen Person.',
+    info:'Die Kasse sollte über den Tod informiert werden, sofern dies nicht bereits über andere Stellen geschehen ist. Offene Leistungs-, Beitrags- oder Pflegefragen können dabei geklärt werden.',
+    docs:['Sterbeurkunde','Versichertennummer'],links:[]
+  },
+  employer:{
+    phase:'later',title:'Arbeitgeber / Dienstherr informieren und Ansprüche klären',kind:'Meldung',urgency:'zeitnah',
+    where:'Arbeitgeber, Personalstelle oder Dienstherr.',
+    info:'Zu klären sind z. B. Restentgelt, Urlaubsabgeltung, betriebliche Versicherungen, Versorgung, Sterbegeld nach Tarif-/Dienstrecht oder Ansprechpartner für Zusatzversorgung.',
+    docs:['Sterbeurkunde','Personalnummer','ggf. Vollmacht/Erbnachweis'],links:[]
+  },
+  digital:{
+    phase:'later',title:'Digitalen Nachlass bearbeiten',kind:'Organisation',urgency:'später',
+    where:'E-Mail-, Cloud-, Social-Media-, Zahlungs- und Plattformanbieter.',
+    info:'Zugänge sichern, Verträge beenden oder Konten in einen Gedenkstatus versetzen. Vorher Erbenstellung und datenschutzrechtliche/vertragliche Voraussetzungen prüfen.',
+    docs:['Sterbeurkunde','ggf. Erbnachweis','Kontodaten/Nutzernamen'],links:[]
+  },
+  contracts:{
+    phase:'later',title:'Verträge, Abos, Energie, Telefon, Vereine bearbeiten',kind:'Organisation',urgency:'nach Sichtung',
+    where:'Jeweilige Vertragspartner.',
+    info:'Nicht jeder Vertrag endet automatisch mit dem Tod. Je nach Vertrag kommt Kündigung, Sonderkündigung, Übernahme oder Umschreibung in Betracht.',
+    docs:['Sterbeurkunde','Kunden-/Vertragsnummer','ggf. Erbnachweis'],links:[]
+  }
+};
+
+function factYes(c,key){return (c.facts||{})[key]==='yes'}
+function factNo(c,key){return (c.facts||{})[key]==='no'}
+function taskRelevance(c,id){
+  if(id==='sterbevierteljahr' && (factNo(c,'pensioner')||factNo(c,'spouse'))) return 'hide';
+  if(id==='widowPension' && factNo(c,'spouse')) return 'hide';
+  if(id==='orphanPension' && factNo(c,'children')) return 'hide';
+  if(id==='educationPension' && factNo(c,'divorcedChild')) return 'hide';
+  if(id==='accidentBenefits' && factNo(c,'workAccident')) return 'hide';
+  if(id==='funeralCosts' && factNo(c,'funeralHelp')) return 'hide';
+  if(id==='civilService' && factNo(c,'civilServant')) return 'hide';
+  if(id==='landRegister' && factNo(c,'realEstate')) return 'hide';
+  if(id==='familyBenefits' && factNo(c,'children')) return 'hide';
+  if(id==='inheritanceReject' && factNo(c,'inheritanceRisk')) return 'optional';
+  return 'show';
+}
+function taskStatus(c,id){const v=(c.tasks||{})[id];if(v===true)return 'done';if(v===false||!v)return 'open';return v}
+function statusLabel(s){return s==='done'?'Erledigt':s==='applied'?'Beantragt / gemeldet':s==='prepared'?'Vorbereitet':'Offen'}
+function deathTaskCard(c,id){
+  const t=DEATH_TASKS[id],rel=taskRelevance(c,id);if(rel==='hide')return '';
+  const st=taskStatus(c,id),cls=st==='done'?'done':st==='applied'?'applied':st==='prepared'?'prepared':'';
+  const optional=rel==='optional'?'<span class="death-badge optional">nur falls nötig</span>':'';
+  const links=(t.links||[]).map(([lab,url])=>`<button class="cta ghost small-btn" onclick="event.preventDefault();event.stopPropagation();window.open('${url}','_blank','noopener')">${esc(lab)} ↗</button>`).join('');
+  const prep=applicationSupported(id)?`<button class="cta application-btn" onclick="event.preventDefault();event.stopPropagation();openApplication('${id}')">📝 Antrag vorbereiten</button>`:'';
+  return `<details class="death-task ${cls}">
+    <summary><div class="death-check">${st==='done'?'✓':st==='applied'?'↗':st==='prepared'?'✎':'○'}</div><div class="grow"><b>${esc(t.title)}</b><div class="meta">${esc(t.kind)} · ${esc(t.urgency)}</div></div><span class="death-status">${statusLabel(st)}</span>${optional}</summary>
+    <div class="death-detail">
+      <div class="death-info"><b>Was bedeutet das?</b><p>${esc(t.info)}</p></div>
+      <div class="death-info"><b>Wo?</b><p>${esc(t.where)}</p></div>
+      <div class="death-info"><b>Typische Unterlagen</b><ul>${(t.docs||[]).map(d=>`<li>${esc(d)}</li>`).join('')}</ul></div>
+      ${prep}
+      ${links?`<div class="death-links">${links}</div>`:''}
+      <div class="death-actions">
+        <button class="cta ghost" onclick="event.preventDefault();setCaseTaskStatus('${id}','open')">Offen</button>
+        ${applicationSupported(id)?`<button class="cta ghost" onclick="event.preventDefault();setCaseTaskStatus('${id}','prepared')">Vorbereitet</button>`:''}
+        <button class="cta ghost" onclick="event.preventDefault();setCaseTaskStatus('${id}','applied')">Beantragt</button>
+        <button class="cta teal" onclick="event.preventDefault();setCaseTaskStatus('${id}','done')">Erledigt</button>
+      </div>
+    </div>
+  </details>`;
+}
+async function setCaseTaskStatus(id,status){const c=state.cases[0];if(!c)return;c.tasks=c.tasks||{};c.tasks[id]=status;await idbSet('cases','main',state.cases);render()}
+function factSelect(label,key,val0='unknown'){return selectField(label,'fact_'+key,val0,[`unknown|Weiß ich noch nicht`,`yes|Ja`,`no|Nein`])}
+function caseScreen(){const current=state.cases[0]||{},f=current.facts||{},opts=state.persons.map(p=>`<option value="${p.id}" ${current.personId===p.id?'selected':''}>${esc(personName(p))} – ${esc(relationLabel(p.relation))}</option>`).join('');return `<section class="screen">${appTop('Sterbefall','Schritt für Schritt durch Aufgaben, Anträge und Fristen')}<div class="content"><div class="form-card"><h3>Fall</h3><div class="field"><label>Verstorbene Person</label><select id="casePerson"><option value="">Bitte auswählen</option>${opts}</select></div>${field('Sterbedatum','cDeath',current.deathDate,'date')}${selectField('Sterbeort','cPlace',current.place||'',['|Bitte auswählen','Zuhause','Krankenhaus','Pflegeheim','Hospiz','Ausland','Sonstiges'])}<details class="case-facts"><summary>Welche Anträge könnten relevant sein? <span>kurze Fragen</span></summary><div class="mt16">${factSelect('Hat die verstorbene Person bereits gesetzliche Rente bezogen?','pensioner',f.pensioner)}${factSelect('Gibt es einen hinterbliebenen Ehe-/Lebenspartner?','spouse',f.spouse)}${factSelect('Gibt es Kinder / mögliche Waisenrentenberechtigte?','children',f.children)}${factSelect('Erzieht ein geschiedener früherer Partner ein gemeinsames Kind?','divorcedChild',f.divorcedChild)}${factSelect('Könnte der Tod Folge eines Arbeits-/Wegeunfalls oder einer Berufskrankheit sein?','workAccident',f.workAccident)}${factSelect('War die verstorbene Person Beamter/Beamtin oder Versorgungsempfänger?','civilServant',f.civilServant)}${factSelect('Sind die Bestattungskosten finanziell schwer tragbar?','funeralHelp',f.funeralHelp)}${factSelect('Gibt es eine Immobilie / Grundbesitz?','realEstate',f.realEstate)}${factSelect('Besteht das Risiko eines überschuldeten Nachlasses?','inheritanceRisk',f.inheritanceRisk)}</div></details><button class="cta teal full" onclick="saveCase()">Fall speichern / aktualisieren</button></div>${current.personId?caseDashboard(current):'<div class="empty-card"><div class="empty-icon">🕯️</div><h3>Noch kein Fall angelegt</h3><p>Wähle eine bereits vorhandene Person aus. Stammdaten werden automatisch übernommen.</p></div>'}</div></section>`}
+
+function caseDashboard(c){const p=state.persons.find(x=>x.id===c.personId);if(!p)return '';const sections=[
+  ['first','Jetzt zuerst','Dokumente und erste Schritte',['doctor','undertaker','cert']],
+  ['benefits','Anträge & finanzielle Leistungen','Hier kann Geld verloren gehen, wenn wichtige Anträge übersehen werden.',['sterbevierteljahr','widowPension','orphanPension','educationPension','accidentBenefits','funeralCosts','occupationalPension','civilService','lifeInsurance']],
+  ['estate','Erbe & Nachlass','Fristen und Nachweise',['inheritanceReject','inheritanceCertificate','inheritanceTax','landRegister']],
+  ['later','Weitere Stellen','Danach systematisch abarbeiten',['familyBenefits','housingBenefits','health','employer','contracts','digital']]
+];return `<div class="case-hero"><small>Fallakte</small><h2>${esc(personName(p))}</h2><div>${c.deathDate?`† ${fmtDate(c.deathDate)}`:''}${c.place?` · ${esc(c.place)}`:''}</div></div>
+<div class="notice mt16"><b>Wichtig zum Sterbevierteljahr:</b> Die „drei Monate Rente“ sind eine Witwen-/Witwerrente in Höhe der Versichertenrente während des Sterbevierteljahres – nicht einfach eine Weiterzahlung der Rente des Verstorbenen. Der schnelle Vorschuss muss bei erfüllten Voraussetzungen innerhalb von 30 Tagen beim Renten Service beantragt werden; der reguläre Hinterbliebenenrentenantrag ist zusätzlich nötig.</div>
+${sections.map(([key,title,sub,ids])=>{const cards=ids.map(id=>deathTaskCard(c,id)).join('');return cards?`<div class="section-title death-section"><div><h2>${title}</h2><div class="small muted">${sub}</div></div></div><div class="death-list">${cards}</div>`:''}).join('')}
+<button class="cta ghost full mt16" onclick="go('generator')">✍ Schreiben aus Falldaten erstellen</button>`}
+
+async function saveCase(){const personId=val('casePerson');if(!personId){toast('Bitte Person auswählen');return}const old=state.cases[0]||{};const facts={};['pensioner','spouse','children','divorcedChild','workAccident','civilServant','funeralHelp','realEstate','inheritanceRisk'].forEach(k=>facts[k]=val('fact_'+k)||'unknown');state.cases=[{...old,id:old.id||uid('case'),personId,deathDate:val('cDeath'),place:val('cPlace'),facts,tasks:old.tasks||{}}];await idbSet('cases','main',state.cases);toast('Fall gespeichert');render()}
+async function toggleCaseTask(id){const c=state.cases[0];if(!c)return;const s=taskStatus(c,id);await setCaseTaskStatus(id,s==='done'?'open':'done')}
+
+
+function applicationScreen(){
+  const c=currentCase(),id=state.applicationTaskId,def=APPLICATIONS[id];
+  if(!c||!def)return `<section class="screen">${appTop('Antrag vorbereiten')}<div class="content"><div class="notice">Bitte zuerst einen Sterbefall und einen unterstützten Antrag auswählen.</div></div></section>`;
+  const dead=deceasedForCase(c),data=appStore(c,id),applicant=applicationApplicant(c,id,data);
+  const selected=applicant?.id||'';
+  const options=personSelectOptions(selected,p=>p.id!==c.personId);
+  return `<section class="screen">${appTop(def.title,def.authority)}<div class="content">
+    <div class="application-source"><div><b>${esc(def.officialForm)}</b><div class="small">${esc(def.sourceStand)}</div></div><span>offizielle Grundlage</span></div>
+    ${applicationProgress(id,c,data,applicant)}
+    <div class="form-card"><h3>Verstorbene Person</h3>
+      <div class="autofill-card"><div><b>${esc(personName(dead))}</b><div class="small muted">${esc(personAddress(dead))}</div></div><span>✓ Fallakte</span></div>
+      <div class="two">${field('Sterbedatum','appDeathDate',c.deathDate,'date')}${field('Rentenversicherungsnummer','appDeceasedPensionNo',data.deceasedPensionNo??dead?.profile?.pensionNo??'')}</div>
+      ${id==='sterbevierteljahr'?field('Postabrechnungs-/Postrentennummer (falls bekannt)','appPostPensionNo',data.postPensionNo||''):''}
+    </div>
+    <div class="form-card"><h3>Wer stellt den Antrag?</h3>
+      <div class="field"><label>Gespeicherte Person</label><select id="applicationApplicant" onchange="changeApplicationApplicant()"><option value="">Bitte auswählen</option>${options}</select></div>
+      <div class="small muted">Stammdaten werden aus der Vorsorge-Personenverwaltung übernommen und bleiben lokal auf dem Gerät.</div>
+    </div>
+    ${sharedApplicantFields(applicant,data)}
+    ${applicationSpecificForm(id,c,data,applicant)}
+    <div class="notice"><b>Hinweis:</b> ${esc(def.note)}</div>
+    <button class="cta teal full mt16" onclick="saveApplication()">Antragsdaten speichern</button>
+    <button class="cta ghost full mt10" onclick="saveApplication(true)">Vorschau / Antragsmappe</button>
+    <div class="row mt10">
+      <button class="cta ghost full" onclick="window.open('${def.online}','_blank','noopener')">Offizielle Antragseite ↗</button>
+      ${def.pdf?`<button class="cta ghost full" onclick="window.open('${def.pdf}','_blank','noopener')">Original-PDF ↗</button>`:''}
+    </div>
+  </div></section>`;
+}
+
+function applicationSpecificForm(id,c,data,applicant){
+  if(id==='sterbevierteljahr')return applicationSterbevierteljahr(data,applicant);
+  if(id==='widowPension')return applicationWidow(data,applicant);
+  if(id==='orphanPension')return applicationOrphan(data,applicant);
+  if(id==='funeralCosts')return applicationFuneralCosts(data,applicant);
+  return '';
+}
+function applicationSterbevierteljahr(data,applicant){
+  return `<div class="form-card"><h3>Voraussetzungen & Angaben zum Vorschuss</h3>
+    ${field('Tag der Eheschließung / Begründung Lebenspartnerschaft','appMarriageDate',data.marriageDate||'','date')}
+    ${selectField('Partnerschaft','appPartnership',data.partnership||'marriage',['marriage|Ehe','civil|Eingetragene Lebenspartnerschaft'])}
+    <label class="checkline"><input type="checkbox" id="appResidenceGermany" ${data.residenceGermany!==false?'checked':''}> Wohnsitz / gewöhnlicher Aufenthalt im Inland</label>
+    <label class="checkline"><input type="checkbox" id="appDeathCertificateOriginal" ${data.deathCertificateOriginal?'checked':''}> Sterbeurkunde im Original liegt für die Antragstellung bereit</label>
+    <label class="checkline"><input type="checkbox" id="appMarriageOneYear" ${data.marriageOneYear!==false?'checked':''}> Ehe/Lebenspartnerschaft bestand beim Tod mindestens ein Jahr</label>
+  </div>
+  ${attachmentChecks(data,[['deathCertificate','Sterbeurkunde im Original, in der Ehe-/Lebenspartner bezeichnet ist'],['id','Personalausweis/Reisepass der hinterbliebenen Person'],['pensionDocument','Rentenmitteilung / Postrentennummer, falls vorhanden']])}`;
+}
+function applicationWidow(data,applicant){
+  return `<div class="form-card"><h3>R0500 – Ehe/Lebenspartnerschaft</h3>
+    ${selectField('Beantragte Rente','appPensionType',data.pensionType||'unknown',['unknown|Noch nicht sicher','small|Kleine Witwen-/Witwerrente','largeAge|Große Witwen-/Witwerrente wegen Alter','largeChild|Große Witwen-/Witwerrente wegen Kindererziehung','largeDisability|Große Witwen-/Witwerrente wegen Erwerbsminderung'])}
+    ${selectField('Partnerschaft','appPartnership',data.partnership||'marriage',['marriage|Ehe','civil|Eingetragene Lebenspartnerschaft'])}
+    ${field('Tag der Eheschließung / Begründung Lebenspartnerschaft','appMarriageDate',data.marriageDate||'','date')}
+    ${selectField('Bestand die Ehe/Lebenspartnerschaft bis zum Tod?','appMarriageUntilDeath',data.marriageUntilDeath||'yes',['yes|Ja','no|Nein'])}
+    ${selectField('Nach dem Tod erneut geheiratet / neue Lebenspartnerschaft?','appRemarried',data.remarried||'no',['no|Nein','yes|Ja'])}
+  </div>
+  <div class="form-card"><h3>Einkommen & Versicherungsfragen</h3>
+    ${selectField('Eigene deutsche gesetzliche Rentenversicherung?','appOwnPensionInsured',data.ownPensionInsured||'unknown',['unknown|Weiß ich nicht','yes|Ja','no|Nein'])}
+    ${textareaField('Eigene Einkünfte (Rente, Beschäftigung, Selbstständigkeit usw.)','appIncome',data.income||'','Nur Übersicht. Das offizielle Verfahren fragt Einkommen detaillierter ab.')}
+    ${selectField('Werden Sozialleistungen bezogen?','appSocialBenefit',data.socialBenefit||'unknown',['unknown|Weiß ich nicht','yes|Ja','no|Nein'])}
+    ${selectField('Fehlen im Versicherungsverlauf des Verstorbenen möglicherweise Zeiten?','appMissingPeriods',data.missingPeriods||'unknown',['unknown|Weiß ich nicht','yes|Ja','no|Nein'])}
+    ${selectField('Gab es Versicherungs-/Beschäftigungszeiten im Ausland?','appForeignPeriods',data.foreignPeriods||'unknown',['unknown|Weiß ich nicht','yes|Ja','no|Nein'])}
+  </div>
+  ${attachmentChecks(data,[['deathCertificate','Sterbeurkunde'],['marriageCertificate','Heirats-/Lebenspartnerschaftsurkunde'],['id','Gültiges Personaldokument'],['pensionHistory','Versicherungsverlauf / Rentenunterlagen des Verstorbenen'],['incomeProof','Nachweise zu eigenen Einkünften'],['healthInsurance','Angaben/Nachweise Kranken- und Pflegeversicherung']])}`;
+}
+function applicationOrphan(data,applicant){
+  const age=applicant?.profile?.birthDate?Math.floor((Date.now()-new Date(applicant.profile.birthDate+'T00:00:00'))/31557600000):null;
+  return `<div class="form-card"><h3>R0610 – Angaben zur Waise</h3>
+    ${selectField('Waisenrente','appOrphanType',data.orphanType||'half',['half|Halbwaisenrente','full|Vollwaisenrente'])}
+    ${selectField('Kindschaftsverhältnis','appChildRelationship',data.childRelationship||'biological',['biological|Leibliches Kind','step|Stiefkind','foster|Pflegekind','grandchild|Enkelkind','sibling|Bruder/Schwester','other|Sonstiges'])}
+    <div class="notice">${age===null?'Alter wird aus dem Geburtsdatum der ausgewählten Person ermittelt.':`Alter laut Stammdaten: <b>${age} Jahre</b>. ${age>=18?'Für volljährige Waisen sind zusätzliche Nachweise erforderlich.':'Für minderjährige Waisen ist die Begründung über Ausbildung in der Regel noch nicht erforderlich.'}`}</div>
+    ${selectField('Falls 18 oder älter: Grund für weiteren Anspruch','appAdultReason',data.adultReason||'none',['none|Nicht zutreffend / unter 18','education|Schule / Ausbildung / Studium','voluntary|Freiwilligendienst','disability|Behinderung','transition|Übergangszeit'])}
+    ${field('Ausbildung / Schule / Studium – von','appEducationFrom',data.educationFrom||'','date')}
+    ${field('voraussichtlich bis','appEducationUntil',data.educationUntil||'','date')}
+    ${selectField('Kindergeldanspruch / Kindergeld beantragt?','appChildBenefit',data.childBenefit||'unknown',['unknown|Weiß ich nicht','yes|Ja','no|Nein'])}
+  </div>
+  ${attachmentChecks(data,[['birthCertificate','Geburts-/Abstammungsurkunde der Waise'],['deathCertificate','Sterbeurkunde(n) des/der verstorbenen Elternteils/Elternteile'],['educationProof','Bei über 18: Schul-/Ausbildungs-/Studiennachweis bzw. R0616'],['childBenefitProof','Falls relevant: Kindergeldbescheid'],['relationshipProof','Falls erforderlich: Nachweis zum Stief-/Pflege-/Enkel-/Geschwisterverhältnis']])}`;
+}
+function applicationFuneralCosts(data,applicant){
+  return `<div class="form-card"><h3>Zuständigkeit & Kosten</h3>
+    ${field('Sozialamt / Behörde','appSocialOffice',data.socialOffice||'')}
+    ${field('Anschrift der Behörde','appSocialOfficeAddress',data.socialOfficeAddress||'')}
+    <div class="two">${field('Bestattungskosten gesamt (€)','appFuneralCostTotal',data.funeralCostTotal||'','number')}${field('Wert/Nachlass verfügbar (€)','appEstateValue',data.estateValue||'','number')}</div>
+    <div class="two">${field('Versicherungs-/Sterbegeldleistungen (€)','appInsuranceBenefits',data.insuranceBenefits||'','number')}${field('Weitere Kostenübernahmen (€)','appOtherBenefits',data.otherBenefits||'','number')}</div>
+  </div>
+  <div class="form-card"><h3>Wirtschaftliche Situation der verpflichteten Person</h3>
+    <div class="two">${field('Monatliches Nettoeinkommen (€)','appMonthlyIncome',data.monthlyIncome||'','number')}${field('Verwertbares Vermögen (€)','appAssets',data.assets||'','number')}</div>
+    ${field('Monatliche Wohnkosten (€)','appHousingCosts',data.housingCosts||'','number')}
+    ${field('Unterhaltspflichten / Personen im Haushalt','appDependants',data.dependants||'')}
+    ${textareaField('Warum ist die Kostentragung nicht zumutbar?','appReason',data.reason||'','Kurz und sachlich schildern.')}
+  </div>
+  ${attachmentChecks(data,[['deathCertificate','Sterbeurkunde'],['funeralInvoice','Bestattungsrechnung bzw. Kostenvoranschlag'],['income','Einkommensnachweise'],['assets','Vermögensnachweise / Kontoauszüge nach Vorgabe des Sozialamts'],['estate','Nachlassübersicht / Nachweise zum Nachlass'],['insurance','Nachweise zu Sterbegeld-/Versicherungsleistungen'],['obligation','Nachweis, warum du zur Kostentragung verpflichtet bist']])}`;
+}
+function readAttachments(keys){
+  const o={};for(const k of keys)o[k]=checked('att_'+k);return o;
+}
+function collectApplicationData(id){
+  const base={
+    applicantId:val('applicationApplicant'),
+    phone:val('appPhone'),email:val('appEmail'),pensionNo:val('appPensionNo'),taxId:val('appTaxId'),
+    healthInsurance:val('appHealthInsurance'),iban:val('appIban'),bankName:val('appBankName'),accountHolder:val('appAccountHolder'),
+    deceasedPensionNo:val('appDeceasedPensionNo'),deathDate:val('appDeathDate')
+  };
+  if(id==='sterbevierteljahr')return {...base,postPensionNo:val('appPostPensionNo'),marriageDate:val('appMarriageDate'),partnership:val('appPartnership'),residenceGermany:checked('appResidenceGermany'),deathCertificateOriginal:checked('appDeathCertificateOriginal'),marriageOneYear:checked('appMarriageOneYear'),attachments:readAttachments(['deathCertificate','id','pensionDocument'])};
+  if(id==='widowPension')return {...base,pensionType:val('appPensionType'),partnership:val('appPartnership'),marriageDate:val('appMarriageDate'),marriageUntilDeath:val('appMarriageUntilDeath'),remarried:val('appRemarried'),ownPensionInsured:val('appOwnPensionInsured'),income:val('appIncome'),socialBenefit:val('appSocialBenefit'),missingPeriods:val('appMissingPeriods'),foreignPeriods:val('appForeignPeriods'),attachments:readAttachments(['deathCertificate','marriageCertificate','id','pensionHistory','incomeProof','healthInsurance'])};
+  if(id==='orphanPension')return {...base,orphanType:val('appOrphanType'),childRelationship:val('appChildRelationship'),adultReason:val('appAdultReason'),educationFrom:val('appEducationFrom'),educationUntil:val('appEducationUntil'),childBenefit:val('appChildBenefit'),attachments:readAttachments(['birthCertificate','deathCertificate','educationProof','childBenefitProof','relationshipProof'])};
+  if(id==='funeralCosts')return {...base,socialOffice:val('appSocialOffice'),socialOfficeAddress:val('appSocialOfficeAddress'),funeralCostTotal:val('appFuneralCostTotal'),estateValue:val('appEstateValue'),insuranceBenefits:val('appInsuranceBenefits'),otherBenefits:val('appOtherBenefits'),monthlyIncome:val('appMonthlyIncome'),assets:val('appAssets'),housingCosts:val('appHousingCosts'),dependants:val('appDependants'),reason:val('appReason'),attachments:readAttachments(['deathCertificate','funeralInvoice','income','assets','estate','insurance','obligation'])};
+  return base;
+}
+async function saveApplication(openPreview=false){
+  const c=currentCase(),id=state.applicationTaskId;if(!c||!id)return;
+  const data=collectApplicationData(id);if(!data.applicantId){toast('Bitte antragstellende Person auswählen');return}
+  c.applications=c.applications||{};c.applications[id]={...(c.applications[id]||{}),...data,updatedAt:new Date().toISOString()};
+  const applicant=state.persons.find(p=>p.id===data.applicantId);
+  if(applicant&&checked('saveFinance')){
+    applicant.finance=applicant.finance||{};
+    applicant.finance.iban=data.iban;applicant.finance.bankName=data.bankName;applicant.finance.accountHolder=data.accountHolder;
+    applicant.profile=applicant.profile||{};
+    if(data.pensionNo)applicant.profile.pensionNo=data.pensionNo;
+    if(data.taxId)applicant.profile.taxId=data.taxId;
+    if(data.healthInsurance)applicant.profile.healthInsurance=data.healthInsurance;
+    await persistPersons();
+  }
+  if(data.deceasedPensionNo){const dead=deceasedForCase(c);if(dead){dead.profile=dead.profile||{};dead.profile.pensionNo=data.deceasedPensionNo;await persistPersons()}}
+  c.tasks=c.tasks||{};if(!['applied','done'].includes(c.tasks[id]))c.tasks[id]='prepared';
+  await idbSet('cases','main',state.cases);toast('Antragsdaten lokal gespeichert');
+  if(openPreview)go('application-preview');else render();
+}
+function changeApplicationApplicant(){
+  const c=currentCase(),id=state.applicationTaskId,data=appStore(c,id);
+  data.applicantId=val('applicationApplicant');render();
+}
+function boolText(v){return v===true?'Ja':v===false?'Nein':v==='yes'?'Ja':v==='no'?'Nein':v||'—'}
+function moneyText(v){if(v===''||v===undefined||v===null)return '—';const n=Number(v);return Number.isFinite(n)?n.toLocaleString('de-DE',{style:'currency',currency:'EUR'}):esc(v)}
+function applicationPreview(){
+  const c=currentCase(),id=state.applicationTaskId,def=APPLICATIONS[id];
+  if(!c||!def)return `<section class="screen">${appTop('Antragsmappe')}<div class="content"><div class="notice">Keine Antragsdaten vorhanden.</div></div></section>`;
+  const data=appStore(c,id),dead=deceasedForCase(c),applicant=applicationApplicant(c,id,data);
+  return `<section class="screen"><div class="topbar no-print"><button class="cta ghost back-btn" onclick="back()">‹</button><div class="grow"><h1>Antragsmappe</h1><div class="sub">${esc(def.title)}</div></div></div>
+    <div class="content application-print">
+      ${renderApplicationPreview(id,c,data,dead,applicant)}
+      <div class="no-print application-preview-actions">
+        <button class="cta teal full" onclick="window.print()">Drucken / als PDF speichern</button>
+        <button class="cta ghost full mt10" onclick="shareApplicationSummary()">Teilen / versenden</button>
+        <button class="cta ghost full mt10" onclick="window.open('${def.online}','_blank','noopener')">Offiziellen Antrag öffnen ↗</button>
+      </div>
+    </div>
+  </section>`;
+}
+function previewTable(rows){return `<table class="application-table">${rows.map(([a,b])=>`<tr><th>${esc(a)}</th><td>${esc(b===undefined||b===null||b===''?'—':String(b))}</td></tr>`).join('')}</table>`}
+function checkedAttachments(data,labels){const a=data.attachments||{};return `<ul class="application-checklist">${labels.map(([k,l])=>`<li>${a[k]?'☑':'☐'} ${esc(l)}</li>`).join('')}</ul>`}
+function renderApplicationPreview(id,c,d,dead,applicant){
+  const def=APPLICATIONS[id],dx=dead?.profile||{},ax=applicant?.profile||{};
+  const header=`<article class="application-sheet"><header><div class="form-brand">Sterbefall Assistent Deutschland</div><h1>${esc(def.title)}</h1><p>Vorbereitete Antragsdaten · ${esc(def.authority)}</p></header>
+  <h2>Verstorbene Person</h2>${previewTable([['Name',personName(dead)],['Geburtsdatum',fmtDate(dx.birthDate)],['Adresse',personAddress(dead)],['Sterbedatum',fmtDate(d.deathDate||c.deathDate)],['Rentenversicherungsnummer',d.deceasedPensionNo||dx.pensionNo||'']])}
+  <h2>Antragstellende Person</h2>${previewTable([['Name',personName(applicant)],['Geburtsdatum',fmtDate(ax.birthDate)],['Adresse',personAddress(applicant)],['Telefon',d.phone||ax.phone||''],['E-Mail',d.email||ax.email||''],['Rentenversicherungsnummer',d.pensionNo||ax.pensionNo||''],['Steuer-ID',d.taxId||ax.taxId||''],['Krankenkasse',d.healthInsurance||ax.healthInsurance||''],['IBAN',d.iban||''],['Geldinstitut',d.bankName||''],['Kontoinhaber/in',d.accountHolder||'']])}`;
+  let body='';
+  if(id==='sterbevierteljahr')body=`<h2>Vorschussangaben</h2>${previewTable([['Postrentennummer',d.postPensionNo],['Tag der Eheschließung / Lebenspartnerschaft',fmtDate(d.marriageDate)],['Partnerschaft',d.partnership==='civil'?'Eingetragene Lebenspartnerschaft':'Ehe'],['Wohnsitz im Inland',boolText(d.residenceGermany)],['Sterbeurkunde Original liegt bereit',boolText(d.deathCertificateOriginal)],['Mindestens 1 Jahr bestanden',boolText(d.marriageOneYear)]])}<h2>Unterlagen</h2>${checkedAttachments(d,[['deathCertificate','Sterbeurkunde im Original'],['id','Personalausweis/Reisepass'],['pensionDocument','Rentenunterlagen / Postrentennummer']])}`;
+  if(id==='widowPension')body=`<h2>R0500 – Kernangaben</h2>${previewTable([['Beantragte Rentenart',d.pensionType],['Partnerschaft',d.partnership==='civil'?'Eingetragene Lebenspartnerschaft':'Ehe'],['Tag der Eheschließung',fmtDate(d.marriageDate)],['Bestand bis zum Tod',boolText(d.marriageUntilDeath)],['Erneut geheiratet',boolText(d.remarried)],['Eigene gesetzliche Rentenversicherung',boolText(d.ownPensionInsured)],['Sozialleistungen',boolText(d.socialBenefit)],['Fehlende Versicherungszeiten möglich',boolText(d.missingPeriods)],['Auslandszeiten möglich',boolText(d.foreignPeriods)]])}<p><b>Eigene Einkünfte:</b><br>${esc(d.income||'—')}</p><h2>Unterlagen</h2>${checkedAttachments(d,[['deathCertificate','Sterbeurkunde'],['marriageCertificate','Heirats-/Lebenspartnerschaftsurkunde'],['id','Personaldokument'],['pensionHistory','Versicherungsverlauf/Rentenunterlagen'],['incomeProof','Einkommensnachweise'],['healthInsurance','Kranken-/Pflegeversicherung']])}`;
+  if(id==='orphanPension')body=`<h2>R0610 – Angaben zur Waise</h2>${previewTable([['Art',d.orphanType==='full'?'Vollwaisenrente':'Halbwaisenrente'],['Kindschaftsverhältnis',d.childRelationship],['Grund bei Volljährigkeit',d.adultReason],['Ausbildung von',fmtDate(d.educationFrom)],['Ausbildung bis',fmtDate(d.educationUntil)],['Kindergeld',boolText(d.childBenefit)]])}<h2>Unterlagen</h2>${checkedAttachments(d,[['birthCertificate','Geburts-/Abstammungsurkunde'],['deathCertificate','Sterbeurkunde(n)'],['educationProof','Ausbildungs-/Studiennachweis bzw. R0616'],['childBenefitProof','Kindergeldbescheid'],['relationshipProof','ggf. Nachweis Kindschaftsverhältnis']])}`;
+  if(id==='funeralCosts')body=`<h2>Antrag an das Sozialamt</h2><p><b>${esc(d.socialOffice||'[zuständiges Sozialamt]')}</b><br>${esc(d.socialOfficeAddress||'')}</p><p>Hiermit beantrage ich die Übernahme der erforderlichen Kosten der Bestattung nach § 74 SGB XII, soweit mir die Kostentragung nicht zugemutet werden kann.</p>${previewTable([['Bestattungskosten gesamt',moneyText(d.funeralCostTotal)],['Verfügbarer Nachlass',moneyText(d.estateValue)],['Versicherungs-/Sterbegeldleistungen',moneyText(d.insuranceBenefits)],['Weitere Kostenübernahmen',moneyText(d.otherBenefits)],['Monatliches Nettoeinkommen',moneyText(d.monthlyIncome)],['Verwertbares Vermögen',moneyText(d.assets)],['Wohnkosten',moneyText(d.housingCosts)],['Unterhalt/Haushalt',d.dependants]])}<p><b>Begründung:</b><br>${esc(d.reason||'—')}</p><h2>Unterlagen</h2>${checkedAttachments(d,[['deathCertificate','Sterbeurkunde'],['funeralInvoice','Bestattungsrechnung/Kostenvoranschlag'],['income','Einkommensnachweise'],['assets','Vermögensnachweise'],['estate','Nachlassübersicht'],['insurance','Versicherungsleistungen'],['obligation','Nachweis der Kostentragungspflicht']])}`;
+  return `${header}${body}<div class="signature"><div>Ort, Datum</div><div>Unterschrift</div></div><footer>${esc(def.officialForm)} · Daten lokal vorbereitet am ${new Date().toLocaleDateString('de-DE')}</footer></article>`;
+}
+async function shareApplicationSummary(){
+  const def=APPLICATIONS[state.applicationTaskId];if(!def)return;
+  const text=`${def.title}\n\nDie Antragsdaten wurden im Sterbefall Assistent Deutschland vorbereitet. Bitte für die Einreichung das offizielle Verfahren/Formular verwenden.`;
+  if(navigator.share){try{await navigator.share({title:def.title,text});return}catch(e){if(e?.name==='AbortError')return}}
+  try{await navigator.clipboard.writeText(text);toast('Zusammenfassung kopiert')}catch(e){toast('Teilen wird auf diesem Gerät nicht unterstützt')}
+}
 function generator(){const c=state.cases[0],deceased=c?state.persons.find(x=>x.id===c.personId):null,sender=activePerson()||state.persons.find(p=>p.relation==='self')||deceased;if(!deceased)return `<section class="screen">${appTop('Schreiben erstellen')}<div class="content"><div class="notice">Bitte zuerst einen Sterbefall anlegen.</div><button class="cta teal full mt10" onclick="go('case')">Sterbefall öffnen</button></div></section>`;return `<section class="screen">${appTop('Schreiben erstellen',`Falldaten von ${personName(deceased)}`)}<div class="content"><div class="form-card"><h3>Vorlage</h3>${selectField('Schreiben','template','death',['death|Mitteilung über Sterbefall','cancel|Kündigung wegen Todesfall','record|Bitte um schriftliche Bestätigung'])}${field('Empfänger / Organisation','recipient','')}${field('Vertrags- / Kundennummer','contractNo','')}<button class="cta teal full" onclick="updatePreview()">Vorschau aktualisieren</button></div><div class="section-title"><h2>Vorschau</h2><button onclick="window.print()">Drucken / PDF</button></div><div id="preview" class="preview">${esc(buildLetter('death','', '',deceased,c,sender))}</div><div class="notice mt10">Das Schreiben ist eine editierbare Organisationshilfe und keine rechtliche Einzelfallberatung.</div></div></section>`}
 function buildLetter(type,recipient,contractNo,p,c,sender){const sx=sender?.profile||{},senderName=personName(sender),senderBlock=[senderName,sx.street,[sx.zip,sx.city].filter(Boolean).join(' ')].filter(Boolean).join('\n'),deathDate=fmtDate(c?.deathDate),birth=fmtDate(p.profile?.birthDate);let body='';if(type==='death')body=`hiermit teile ich Ihnen mit, dass ${personName(p)}${birth?`, geboren am ${birth}`:''}${deathDate?`, am ${deathDate}`:''} verstorben ist.\n\nBitte teilen Sie mir mit, welche Unterlagen Sie für die Bearbeitung benötigen.`;if(type==='cancel')body=`hiermit bitte ich um Beendigung des bestehenden Vertrags${contractNo?` mit der Nummer ${contractNo}`:''} aufgrund des Todes von ${personName(p)}${deathDate?` zum ${deathDate}`:''}.\n\nBitte bestätigen Sie die Bearbeitung schriftlich und informieren Sie mich über noch benötigte Nachweise.`;if(type==='record')body=`bezugnehmend auf den Sterbefall von ${personName(p)} bitte ich um eine schriftliche Bestätigung des Bearbeitungsstands und um Mitteilung, falls noch Unterlagen erforderlich sind.`;return `${senderBlock}\n\n${recipient||'[Empfänger]'}\n\nBetreff: ${type==='cancel'?'Vertrag wegen Todesfall':'Mitteilung Sterbefall'}\n\nSehr geehrte Damen und Herren,\n\n${body}\n\nMit freundlichen Grüßen\n\n${senderName}`}
 function updatePreview(){const c=state.cases[0],p=c?state.persons.find(x=>x.id===c.personId):null,s=activePerson()||state.persons.find(x=>x.relation==='self')||p;if(!p)return;document.getElementById('preview').textContent=buildLetter(val('template')||'death',val('recipient'),val('contractNo'),p,c,s)}

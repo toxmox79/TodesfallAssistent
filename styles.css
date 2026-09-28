@@ -32,3 +32,70 @@
 .pdf-status{margin-top:14px;padding:14px 16px;border-radius:16px;background:#f1f7f6;border:1px solid #d9ece8;color:#34434b;font-size:13px;line-height:1.45}.pdf-status b{color:var(--teal-dark)}
 
 .attachment-grid{display:grid;gap:10px}.attachment-card{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:15px;padding:10px;background:#fff}.attachment-card img{width:72px;height:92px;object-fit:cover;border-radius:9px;border:1px solid var(--line)}.attachment-pdf{width:72px;height:92px;display:grid;place-items:center;border-radius:9px;background:#fff1ef;color:#b42318;font-weight:900}.attachment-card small{display:block;color:var(--muted);margin-top:3px}.attachment-actions{display:flex;flex-direction:column;gap:5px}.attachment-actions button{border:0;background:none;color:var(--teal-dark);font-size:12px;font-weight:700;text-align:right}.attachment-actions .danger-link{color:#b42318}.empty-mini{padding:12px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);font-size:12px}.pdf-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.pdf-actions .cta{padding:10px 14px}.mt10{margin-top:10px}.mt16{margin-top:16px}
+
+/* v0.7 Sterbefall-Hilfe */
+.case-facts{border:1px solid var(--line);border-radius:16px;margin:12px 0 16px;background:#fbfcfd}
+.case-facts>summary{padding:14px 16px;cursor:pointer;font-weight:800;list-style:none;display:flex;justify-content:space-between;gap:12px}
+.case-facts>summary::-webkit-details-marker{display:none}
+.case-facts>summary span{font-weight:600;color:var(--muted);font-size:12px}
+.case-facts[open]>summary{border-bottom:1px solid var(--line)}
+.case-facts>div{padding:0 14px 4px}
+.death-section{margin-top:24px}
+.death-list{display:grid;gap:10px}
+.death-task{border:1px solid var(--line);border-radius:18px;background:#fff;overflow:hidden;box-shadow:0 6px 18px rgba(24,39,56,.04)}
+.death-task>summary{cursor:pointer;list-style:none;padding:14px;display:flex;align-items:center;gap:10px}
+.death-task>summary::-webkit-details-marker{display:none}
+.death-task[open]>summary{border-bottom:1px solid var(--line);background:#fbfcfd}
+.death-check{width:30px;height:30px;border:2px solid #cfd6da;border-radius:50%;display:grid;place-items:center;flex:0 0 auto;font-weight:900}
+.death-task.done .death-check{background:var(--teal);border-color:var(--teal);color:#fff}
+.death-task.applied .death-check{background:var(--yellow-soft);border-color:#e4b900;color:#8a6900}
+.death-status{font-size:11px;font-weight:800;padding:5px 8px;border-radius:999px;background:#f0f3f5;white-space:nowrap}
+.death-task.done .death-status{background:var(--teal-soft);color:var(--teal-dark)}
+.death-task.applied .death-status{background:var(--yellow-soft);color:#806300}
+.death-badge{font-size:10px;border-radius:999px;padding:4px 7px;white-space:nowrap}
+.death-badge.optional{background:#f3f4f6;color:#6b7280}
+.death-detail{padding:15px}
+.death-info{margin-bottom:13px}
+.death-info b{font-size:13px}
+.death-info p,.death-info ul{margin:5px 0 0;color:#4b5563;font-size:13px;line-height:1.48}
+.death-info ul{padding-left:20px}
+.death-links{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.small-btn{padding:9px 12px!important;font-size:12px}
+.death-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;padding-top:13px;border-top:1px solid var(--line)}
+.death-actions .cta{padding:10px 8px;font-size:12px}
+@media(max-width:430px){
+  .death-task>summary{align-items:flex-start;flex-wrap:wrap}
+  .death-task>summary .grow{min-width:calc(100% - 44px)}
+  .death-status{margin-left:40px}
+  .death-actions{grid-template-columns:1fr}
+}
+
+/* v0.8 Antragsassistent */
+.death-task.prepared .death-check{background:#e8f1ff;border-color:#7aa7e8;color:#315f9f}
+.death-task.prepared .death-status{background:#e8f1ff;color:#315f9f}
+.application-btn{width:100%;margin:6px 0 12px;background:var(--yellow);box-shadow:none}
+.application-source{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#eefaf7;border:1px solid #ccefe8;border-radius:18px;padding:14px 15px;margin-bottom:12px}
+.application-source span{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;background:#fff;border-radius:999px;padding:5px 8px;white-space:nowrap}
+.application-progress{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:14px}
+.application-progress>div{display:flex;align-items:baseline;gap:8px}
+.application-progress b{font-size:25px;color:var(--teal-dark)}
+.application-progress span{font-size:13px;font-weight:700}
+.application-progress progress{width:100%;height:8px;margin:8px 0 3px;accent-color:var(--teal)}
+.application-progress small{color:var(--muted)}
+.autofill-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 12px;border-radius:14px;background:var(--teal-soft);margin-bottom:13px}
+.autofill-card span{font-size:11px;font-weight:800;color:var(--teal-dark);white-space:nowrap}
+.application-sheet{max-width:820px;margin:0 auto;background:#fff;color:#111;padding:28px 32px;border:1px solid #ddd;border-radius:10px}
+.application-sheet header{border-bottom:2px solid #222;padding-bottom:14px;margin-bottom:20px}
+.application-sheet header h1{font-size:25px;margin:4px 0 5px}
+.application-sheet h2{font-size:15px;margin:22px 0 8px;border-bottom:1px solid #ddd;padding-bottom:5px}
+.application-table{width:100%;border-collapse:collapse;font-size:12px}
+.application-table th,.application-table td{border:1px solid #ddd;padding:7px 8px;vertical-align:top;text-align:left}
+.application-table th{width:38%;background:#f6f7f8}
+.application-checklist{list-style:none;padding:0;margin:6px 0;font-size:12px;line-height:1.7}
+.application-preview-actions{margin-top:18px}
+.application-print .signature{margin-top:34px}
+@media print{
+  .application-print{padding:0!important}
+  .application-sheet{border:0;border-radius:0;padding:0;max-width:none}
+  .application-sheet footer{position:static;margin-top:24px;font-size:9px;color:#555}
+}

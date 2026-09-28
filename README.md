@@ -1,38 +1,56 @@
-# Sterbefall Assistent Deutschland v0.6.4
+# Sterbefall Assistent Deutschland v0.8
 
-## Schwerpunkt dieser Version: Formular-Abgleich
-Die Formularlogik wurde gegen die aktuell veröffentlichten offiziellen Strukturen geprüft und überarbeitet.
+Neu in v0.8: **Anträge vorbereiten**
 
-### Angeglichen
-- Vorsorgevollmacht: Reihenfolge und Ja/Nein-Auswahl nach BMJ, Stand Januar 2023.
-- Betreuungsverfügung: gewünschte Person, Ersatzperson, ausgeschlossene Person und vier Wunschfelder nach BMJ, Stand Januar 2023.
-- Konto-/Depot-/Schrankfachvollmacht: feste Struktur des mit der Deutschen Kreditwirtschaft abgestimmten Formulars. Die frühere frei wählbare Option „über den Tod hinaus“ wurde entfernt; das Formular sieht die Fortgeltung nach dem Tod bereits vor.
-- ZVR Formular P: Felder, Aufbewahrungsort, Zahlungsweise und Vertrauensperson nach Stand 01.02.2024.
-- Organspende: fünf Alternativen wie beim offiziellen Organspendeausweis.
-- Patientenverfügung: Aufbau nach den BMJ-Textbausteinen. Das BMJ stellt hierfür kein einheitliches amtliches Ankreuzformular bereit.
+Im Sterbefall-Bereich können vier besonders wichtige Leistungen direkt vorbereitet werden:
 
-### Zusätzlich verbessert
-- Stammdaten um Anrede, Titel, Geburtsname, Geburtsort, Adresszusatz und Land ergänzt.
-- Automatische PDF-Befüllung erkennt die Felder der mitgelieferten Vorlagen gezielt statt nur über grobe Heuristiken.
-- Vorsorgevollmacht übernimmt jetzt auch sämtliche Einzelentscheidungen als Ja/Nein in die PDF.
-- Patientenverfügung und Organspende übernehmen die Auswahlfelder in die PDF.
-- ZVR übernimmt soweit vorhanden auch den Umfang der Vorsorgevollmacht.
-- ZVR-Eingabemaske um Zahlungsweise, IBAN, Kontoinhaber, Aufbewahrungsart und Vertrauensperson erweitert.
+- Vorschuss für das Sterbevierteljahr (Renten Service Deutsche Post)
+- Witwen-/Witwerrente (DRV R0500)
+- Halb-/Vollwaisenrente (DRV R0500 + R0610)
+- Übernahme erforderlicher Bestattungskosten nach § 74 SGB XII
 
-## Welche Vorlagen sind amtlich standardisiert?
-Die PDFs in `forms/` sind lokal eingebettete, ausfüllbare Reproduktionen der jeweils veröffentlichten Struktur. Sie sind nicht die binär identischen Behörden-PDF-Dateien.
+Die App übernimmt vorhandene Daten von verstorbener und antragstellender Person automatisch. Bankverbindung, Rentenversicherungsnummer, Steuer-ID und Krankenkasse können lokal für weitere Anträge wiederverwendet werden. Für jeden Antrag gibt es eine Unterlagen-Checkliste, einen Fortschritt, eine druckbare Antragsmappe und Links zum offiziellen Verfahren.
 
-- BMJ Vorsorgevollmacht: Struktur nach offizieller Vorlage
-- BMJ Betreuungsverfügung: Struktur nach offizieller Vorlage
-- BMJ/DK Bankvollmacht: Struktur nach abgestimmter Vorlage
-- ZVR Formular P: Struktur nach Formular P
-- Organspendeausweis: Struktur nach offizieller Entscheidungssystematik
-- Patientenverfügung: Zusammenstellung nach BMJ-Textbausteinen; kein einheitliches amtliches Originalformular
-- Schweigepflichtentbindung: App-Vorlage, da kein bundeseinheitliches amtliches Standardformular
-- Bestattungswünsche: App-Vorlage
-- Testament: nur Vorbereitungsblatt, kein fertiges Testament
+Status in der Fallakte: Offen → Vorbereitet → Beantragt → Erledigt.
 
-Weitere Details stehen in `FORMULAR-ABGLEICH.md`.
+Wichtig: Für DRV und Renten Service ersetzt die Antragsmappe nicht das offizielle Formular bzw. eAntrag. Bei § 74 SGB XII gibt es kein bundeseinheitliches Formular; die App erzeugt daher ein nutzbares Anschreiben und eine Daten-/Unterlagenübersicht.
+
+# Sterbefall Assistent Deutschland v0.7
+
+Neu: Der Sterbefall-Bereich ist jetzt ein geführter Angehörigen-Assistent mit aufklappbaren Aufgaben, Fristen, typischen Unterlagen, zuständiger Stelle, offiziellen Links und drei Statusstufen (offen / beantragt / erledigt).
+
+Besonders ergänzt wurden:
+- Vorschuss Sterbevierteljahr
+- Witwen-/Witwerrente
+- Halb-/Vollwaisenrente
+- Erziehungsrente
+- Leistungen der gesetzlichen Unfallversicherung
+- Übernahme von Bestattungskosten nach § 74 SGB XII
+- Betriebsrente / Zusatzversorgung
+- Beamtenrechtliche Hinterbliebenenversorgung
+- Lebens-/Sterbegeldversicherung
+- Erbausschlagung
+- Erbschein
+- Erbschaftsteuer-Anzeige
+- Grundbuchberichtigung
+- Kindergeld/Kinderzuschlag
+- Prüfung von Wohngeld/Bürgergeld/Grundsicherung
+
+Die Fallakte fragt einige Eckdaten ab und blendet offensichtlich unpassende Anträge aus.
+
+# Sterbefall Assistent Deutschland v0.6.3
+
+## Neu
+- In den druckbaren Formularen wurde der sichtbare „ENTWURF“-Hinweis entfernt.
+- Ausgefüllte lokale PDFs werden nach der Erzeugung nicht nur heruntergeladen, sondern können über die System-Teilen-Funktion versendet werden.
+- Auf Android kann dabei – sofern installiert/verfügbar – auch Google Drive im Teilen-Menü gewählt werden.
+- Für jedes Vorsorgedokument können Foto/Scan oder PDF der unterschriebenen Fassung lokal hinterlegt werden.
+- Für die physische Ablage gibt es getrennte Felder „Aufbewahrungsort“ und „Ordner / Register“.
+- Hinterlegte Kopien können angesehen, geteilt oder wieder entfernt werden.
+- Die Dateien bleiben local-first in IndexedDB auf dem Gerät.
+
+## Hinweis
+Das Testament bleibt bewusst ein Vorbereitungsblatt. Ein ausgedruckter Computertext ist nicht automatisch ein wirksames eigenhändiges Testament.
 
 ## GitHub Pages
-Den kompletten Inhalt einschließlich des Ordners `forms/` hochladen. Danach einmal Strg+F5 ausführen, damit der neue Service-Worker-Cache `v064` aktiv wird.
+Den kompletten Inhalt einschließlich `forms/` hochladen. Danach wegen des aktualisierten Service Workers einmal Strg+F5 ausführen.
