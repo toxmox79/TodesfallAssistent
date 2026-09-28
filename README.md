@@ -1,24 +1,11 @@
-# Sterbefall Assistent Deutschland v0.6
+# Sterbefall Assistent Deutschland v0.6.1
 
-Local-first PWA für Vorsorge, mehrere Angehörige und Sterbefall-Organisation.
+Local-first PWA mit Mehrpersonen-Vorsorge und direkt eingebetteten Blanko-PDFs.
 
-## Neu in v0.6
+## Neu in 0.6.1
+Alle derzeit in der App verwendeten Formulare sind im Ordner `forms/` enthalten und werden vom Service Worker offline gecacht. Beim Upload auf GitHub Pages muss der komplette Ordner `forms/` mit hochgeladen werden.
 
-- Amtliche Blanko-PDFs werden bevorzugt **lokal** geladen.
-- Erwarteter Ordner: `forms/`.
-- Unterstützte lokale Dateinamen:
-  - `vorsorgevollmacht-bmj.pdf`
-  - `betreuungsverfuegung-bmj.pdf`
-  - `zvr-formular-p.pdf`
-- Alternativ kann eine amtliche PDF einmal über die App ausgewählt und als lokale Blanko-Vorlage in IndexedDB gespeichert werden.
-- Persönliche Daten werden beim Befüllen nicht an den Formularanbieter übertragen.
-- Vorlagenstand und Herausgeber werden in der Oberfläche angezeigt.
-- Fallback: Nutzer kann eine aktuelle Original-PDF manuell auswählen.
+Enthalten sind lokale, ausfüllbare Vorlagen für Vorsorgevollmacht, Patientenverfügung, Betreuungsverfügung, Bankvollmacht, Schweigepflichtentbindung, Bestattungswünsche, Organspende-Entscheidung, Testament-Vorbereitungsblatt und eine ZVR-Formular-P-Arbeitskopie.
 
-## Wichtiger Hinweis
-
-Die amtlichen PDFs selbst sollten nur aus den offiziellen Quellen bezogen und bei neuen Fassungen ausgetauscht werden. In dieser Entwicklungsumgebung konnten die BMJ-/ZVR-Dateien nicht zuverlässig als Binärdateien in das ZIP übernommen werden. Die App ist deshalb so vorbereitet, dass du die drei Original-PDFs nur in `forms/` legen musst; danach funktionieren sie offline. Alternativ können sie direkt in der App einmalig lokal installiert werden.
-
-## GitHub Pages
-
-Den kompletten Inhalt des Ordners in das Repository kopieren. Wegen des Service Workers nach einem Update ggf. `Strg+F5` ausführen oder die Website-Daten löschen.
+## Rechtlicher Hinweis
+Die eingebetteten PDFs sind lokale App-Vorlagen/Arbeitskopien und keine Garantie, dass eine amtliche Originalvorlage unverändert wiedergegeben wird. Die App verlinkt zu den offiziellen Quellen. Vor Einreichung oder Unterschrift sollte die aktuelle Originalfassung bzw. amtliche Information geprüft werden. Bei Banken kann ein institutseigenes Vollmachtsformular erforderlich sein. Das Testament-Vorbereitungsblatt ist ausdrücklich kein Testament.

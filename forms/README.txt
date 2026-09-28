@@ -1,22 +1,15 @@
-AMTLICHE BLANKO-PDFs
+Die Blanko-PDFs sind jetzt direkt Teil der App und werden über den Service Worker offline gecacht.
 
-Die App erwartet diese drei Dateien in diesem Ordner:
+Enthalten:
+- vorsorgevollmacht.pdf
+- patientenverfuegung.pdf
+- betreuungsverfuegung.pdf
+- bankvollmacht.pdf
+- schweigepflichtentbindung.pdf
+- bestattungswuensche.pdf
+- organspende-entscheidung.pdf
+- testament-vorbereitungsblatt.pdf
+- zvr-formular-p.pdf
 
-1. vorsorgevollmacht-bmj.pdf
-   Quelle: Bundesministerium der Justiz
-   Formular: Vorsorgevollmacht
-
-2. betreuungsverfuegung-bmj.pdf
-   Quelle: Bundesministerium der Justiz
-   Formular: Betreuungsverfügung
-
-3. zvr-formular-p.pdf
-   Quelle: Zentrales Vorsorgeregister / Bundesnotarkammer
-   Formular P
-
-Die App greift zuerst lokal auf diese Dateien zu. Dadurch funktioniert das
-Ausfüllen nach dem Laden der App ohne Übertragung persönlicher Daten an die
-Formularanbieter.
-
-Wichtig: Bei Aktualisierung amtlicher Formulare die Datei unter gleichem Namen
-austauschen und forms-manifest.json aktualisieren.
+WICHTIG:
+Diese eingebetteten PDFs sind ausfüllbare lokale App-Vorlagen bzw. beim ZVR eine Arbeitskopie. Sie sind nicht als unveränderte amtliche Original-PDFs auszugeben. Die App enthält weiterhin Links zu den offiziellen Quellen, damit die aktuelle Fassung vor Verwendung oder Einreichung geprüft werden kann.

@@ -1,29 +1,14 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "templates": [
-    {
-      "id": "vorsorge",
-      "file": "vorsorgevollmacht-bmj.pdf",
-      "title": "Formular: Vorsorgevollmacht",
-      "issuer": "Bundesministerium der Justiz",
-      "stand": "15.01.2023",
-      "source": "https://www.bmj.de/SharedDocs/Downloads/DE/Formular/Vorsorgevollmacht.html"
-    },
-    {
-      "id": "betreuung",
-      "file": "betreuungsverfuegung-bmj.pdf",
-      "title": "Formular: Betreuungsverfügung",
-      "issuer": "Bundesministerium der Justiz",
-      "stand": "01.01.2023",
-      "source": "https://www.bmj.de/SharedDocs/Downloads/DE/Formular/Betreuungsverfuegung.html"
-    },
-    {
-      "id": "zvrP",
-      "file": "zvr-formular-p.pdf",
-      "title": "Formular P",
-      "issuer": "Zentrales Vorsorgeregister / Bundesnotarkammer",
-      "stand": "01.02.2024",
-      "source": "https://www.vorsorgeregister.de/formulare"
-    }
+    {"id":"vorsorge","file":"vorsorgevollmacht.pdf","title":"Vorsorgevollmacht","type":"local_fillable_template","source":"BMJ Informationen"},
+    {"id":"patienten","file":"patientenverfuegung.pdf","title":"Patientenverfügung","type":"local_fillable_template","source":"BMJ Textbausteine"},
+    {"id":"betreuung","file":"betreuungsverfuegung.pdf","title":"Betreuungsverfügung","type":"local_fillable_template","source":"BMJ Informationen"},
+    {"id":"bank","file":"bankvollmacht.pdf","title":"Bankvollmacht","type":"local_fillable_template"},
+    {"id":"schweigepflicht","file":"schweigepflichtentbindung.pdf","title":"Schweigepflichtentbindung","type":"local_fillable_template"},
+    {"id":"bestattung","file":"bestattungswuensche.pdf","title":"Bestattungswünsche","type":"local_fillable_template"},
+    {"id":"organe","file":"organspende-entscheidung.pdf","title":"Organspende-Entscheidung","type":"local_fillable_template","source":"Organspende-Register separat"},
+    {"id":"testament","file":"testament-vorbereitungsblatt.pdf","title":"Testament - Vorbereitungsblatt","type":"local_fillable_template","warning":"Kein Testament"},
+    {"id":"zvrP","file":"zvr-formular-p.pdf","title":"ZVR Formular P - Arbeitskopie","type":"local_fillable_workcopy","source":"ZVR Formular P, Stand 01.02.2024"}
   ]
 }
