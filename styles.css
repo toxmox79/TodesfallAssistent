@@ -154,3 +154,14 @@
 @media(max-width:520px){
   .legal-info-row{grid-template-columns:1fr;gap:3px}
 }
+
+/* v0.8.6 – Notfallkarte drucken / als Bild teilen */
+.emergency-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:980px;margin:18px auto 8px;padding:0 14px}
+.emergency-print-note{max-width:980px;margin:0 auto 12px;padding:0 20px;color:var(--muted);font-size:13px;text-align:center}
+.emergency-footer{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;text-align:center}
+@media print{
+  body{background:#fff}
+  .emergency{padding:0}
+  .emergency-card,#emergencyCardPrintable,.emergency-head{break-inside:avoid}
+  .emergency-footer{color:#666}
+}

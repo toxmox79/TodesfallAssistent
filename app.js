@@ -143,7 +143,7 @@ function completion(p=activePerson()){
 function appTop(title,sub=''){return `<div class="topbar"><button class="cta ghost back-btn" onclick="back()">‹</button><div class="grow"><h1>${esc(title)}</h1>${sub?`<div class="sub">${esc(sub)}</div>`:''}</div></div>`}
 const nav=()=>`<nav class="bottom-nav no-print"><button class="nav-btn ${state.route==='home'?'active':''}" onclick="go('home')"><span class="ni">⌂</span>Start</button><button class="nav-btn ${['documents','document-detail'].includes(state.route)?'active':''}" onclick="go('documents')"><span class="ni">▤</span>Dokumente</button><button class="nav-btn ${state.route==='case'?'active':''}" onclick="go('case')"><span class="ni">◷</span>Sterbefall</button><button class="nav-btn ${['profile','backup'].includes(state.route)?'active':''}" onclick="go('profile')"><span class="ni">●</span>Profil</button></nav>`;
 function go(r){state.route=r;render();window.scrollTo(0,0)}
-function back(){const map={'person-edit':'vorsorge','vorsorge-person':'vorsorge','profile':'vorsorge-person','trusted':'vorsorge-person','documents':'vorsorge-person','document-detail':'documents','form-fill':'document-detail','official-pdf':state.officialPdfKey==='zvrP'?'zvr':'document-detail','medical':'vorsorge-person','zvr':'vorsorge-person','bestattung':'vorsorge-person','digital':'vorsorge-person','serious':'home','case':'home','application':'case','application-preview':'application','generator':'case','backup':'profile','share':'vorsorge-person','share-import':'home'};go(map[state.route]||'home')}
+function back(){const map={'person-edit':'vorsorge','vorsorge-person':'vorsorge','profile':'vorsorge-person','trusted':'vorsorge-person','documents':'vorsorge-person','document-detail':'documents','form-fill':'document-detail','official-pdf':state.officialPdfKey==='zvrP'?'zvr':'document-detail','medical':'vorsorge-person','zvr':'vorsorge-person','bestattung':'vorsorge-person','digital':'vorsorge-person','emergency':'home','serious':'home','case':'home','application':'case','application-preview':'application','generator':'case','backup':'profile','share':'vorsorge-person','share-import':'home'};go(map[state.route]||'home')}
 function render(){const a=document.getElementById('app');let html='';const r=state.route;if(r==='welcome')html=welcome();else if(r==='home')html=home()+nav();else if(r==='vorsorge')html=vorsorgePeople()+nav();else if(r==='vorsorge-person')html=vorsorgePerson()+nav();else if(r==='person-edit')html=personEdit()+nav();else if(r==='profile')html=profile()+nav();else if(r==='trusted')html=trusted()+nav();else if(r==='documents')html=documents()+nav();else if(r==='document-detail')html=documentDetail()+nav();else if(r==='form-fill')html=formFill()+nav();else if(r==='official-pdf')html=officialPdfScreen()+nav();else if(r==='medical')html=medical()+nav();else if(r==='zvr')html=zvr()+nav();else if(r==='bestattung')html=bestattung()+nav();else if(r==='digital')html=digital()+nav();else if(r==='emergency')html=emergency();else if(r==='serious')html=serious()+nav();else if(r==='case')html=caseScreen()+nav();else if(r==='application')html=applicationScreen()+nav();else if(r==='application-preview')html=applicationPreview()+nav();else if(r==='generator')html=generator()+nav();else if(r==='backup')html=backup()+nav();else if(r==='share')html=shareScreen()+nav();else if(r==='share-import')html=shareImportScreen();a.innerHTML=html;}
 function noPerson(title){return `<section class="screen">${appTop(title)}<div class="content"><div class="empty-card"><div class="empty-icon">👥</div><h3>Noch keine Person ausgewählt</h3><p>Lege in der Vorsorge zuerst eine Person an.</p><button class="cta teal full" onclick="go('vorsorge')">Zur Vorsorge</button></div></div></section>`}
 function personSwitch(p){return `<button class="person-switch" onclick="go('vorsorge')"><span>${relationEmoji(p.relation)} ${esc(personName(p))}</span><small>${esc(relationLabel(p.relation))} · Person wechseln</small></button>`}
@@ -427,7 +427,144 @@ async function saveBestattung(){const p=activePerson();if(!p)return;p.bestattung
 function digital(){const p=activePerson();if(!p)return noPerson('Digitaler Nachlass');const d=p.digital||{};return `<section class="screen">${appTop('Digitaler Nachlass',`Für ${personName(p)}`)}<div class="content"><div class="notice"><b>Keine Passwörter im Klartext speichern.</b> Dokumentiere stattdessen, wo ein Passwortmanager, Notfallzugang oder versiegelte Zugangsliste zu finden ist.</div><div class="form-card"><h3>Vertrauensperson</h3>${field('Verantwortliche Person','digitalContact',d.contactName)}${field('Telefon / Kontakt','digitalContactPhone',d.contactPhone)}${field('Ort der Zugangsinformationen','digitalStorage',d.storageLocation,'text','Zum Beispiel: Passwortmanager mit Notfallzugriff, versiegelter Umschlag im Tresor.')}</div><div class="form-card"><h3>Konten & Geräte</h3>${textareaField('Wichtige Dienste','digitalServices',d.services,'Zum Beispiel E-Mail, Apple/Google, Social Media, PayPal, Domains, Cloudspeicher.')}${textareaField('Geräte / Zugangshinweise','digitalDevices',d.devices,'Nur Hinweise, keine PINs oder Passwörter.')}${textareaField('Wünsche','digitalWishes',d.wishes,'Konten löschen, memorialisieren, Daten sichern, Domains übertragen …')}</div><button class="cta teal full" onclick="saveDigital()">Speichern</button></div></section>`}
 async function saveDigital(){const p=activePerson();p.digital={contactName:val('digitalContact'),contactPhone:val('digitalContactPhone'),storageLocation:val('digitalStorage'),services:val('digitalServices'),devices:val('digitalDevices'),wishes:val('digitalWishes')};await persistPersons();toast('Digitaler Nachlass gespeichert');render()}
 
-function emergency(){const p=activePerson();if(!p)return noPerson('Notfallkarte');normalizePerson(p);const x=p.profile||{},m=p.medical||{},ecs=(p.contacts||[]).filter(c=>c.isEmergency).slice(0,3);return `<section class="emergency"><button class="cta ghost no-print" onclick="go('home')">‹ Zurück</button><div class="emergency-head"><div class="emergency-symbol">⚠</div><h1>NOTFALL</h1><p>Wichtige Informationen für ${esc(personName(p))}</p></div><div class="emergency-card"><h3>Notfallkontakte</h3>${ecs.length?ecs.map(c=>`<div class="contact-line"><div><b>${esc(c.name)}</b><div class="muted">${esc(c.role||'')}</div></div><span>${esc(c.phone||'')}</span></div>`).join(''):'<p>Noch kein Notfallkontakt hinterlegt.</p>'}</div><div class="emergency-card"><h3>Vorsorge</h3><div class="kv"><b>Patientenverfügung</b><span>${isDocDone(p,'patienten')?'Vorhanden':'Nicht hinterlegt'}</span><b>Aufbewahrungsort</b><span>${esc(p.documents.patienten?.storageLocation||'Nicht hinterlegt')}</span><b>Vorsorgevollmacht</b><span>${isDocDone(p,'vorsorge')?'Vorhanden':'Nicht hinterlegt'}</span><b>ZVR</b><span>${p.zvr?.registered?'Registriert':'Nicht als registriert markiert'}</span></div></div><div class="emergency-card"><h3>Medizin</h3><div class="kv"><b>Hausarzt</b><span>${esc(m.doctorName||'Nicht hinterlegt')}</span><b>Telefon</b><span>${esc(m.doctorPhone||'')}</span><b>Allergien</b><span>${esc(m.allergies||'Keine Angaben')}</span><b>Medikamente</b><span>${esc(m.medications||'Keine Angaben')}</span></div></div><div class="emergency-card"><h3>Person</h3><div class="kv"><b>Name</b><span>${esc(personName(p))}</span><b>Geburtsdatum</b><span>${esc(fmtDate(x.birthDate))}</span><b>Krankenkasse</b><span>${esc(x.healthInsurance||'Nicht hinterlegt')}</span></div></div></section>`}
+
+function emergencyCardData(){
+  const p=activePerson();if(!p)return null;
+  normalizePerson(p);
+  const x=p.profile||{},m=p.medical||{},docs=p.documents||{},ecs=(p.contacts||[]).filter(c=>c.isEmergency).slice(0,3);
+  return {
+    personName:personName(p),
+    birthDate:fmtDate(x.birthDate),
+    insurance:x.healthInsurance||'Nicht hinterlegt',
+    doctor:m.doctorName||'Nicht hinterlegt',
+    doctorPhone:m.doctorPhone||'',
+    allergies:m.allergies||'Keine Angaben',
+    medications:m.medications||'Keine Angaben',
+    patienten:isDocDone(p,'patienten')?'Vorhanden':'Nicht hinterlegt',
+    patientenStorage:docs.patienten?.storageLocation||'Nicht hinterlegt',
+    vorsorge:isDocDone(p,'vorsorge')?'Vorhanden':'Nicht hinterlegt',
+    zvr:p.zvr?.registered?'Registriert':'Nicht als registriert markiert',
+    contacts:ecs.map(c=>({name:c.name||'',role:c.role||'',phone:c.phone||''})),
+    created:new Date().toLocaleDateString('de-DE')
+  };
+}
+function emergency(){
+  const p=activePerson();if(!p)return noPerson('Notfallkarte');
+  const d=emergencyCardData();
+  return `<section class="emergency"><div class="emergency-actions no-print">
+    <button class="cta ghost" onclick="go('home')">‹ Zurück</button>
+    <button class="cta teal" onclick="printEmergencyCard()">🖨 Drucken</button>
+    <button class="cta ghost" onclick="shareEmergencyCardImage()">🖼 Bild teilen</button>
+    <button class="cta ghost" onclick="downloadEmergencyCardImage()">💾 Bild speichern</button>
+  </div><div class="emergency-print-note no-print">Die Notfallkarte kann direkt gedruckt oder als PNG-Bild gespeichert und geteilt werden.</div>
+  <div id="emergencyCardPrintable"><div class="emergency-head"><div class="emergency-symbol">⚠</div><h1>NOTFALL</h1><p>Wichtige Informationen für ${esc(personName(p))}</p></div>
+  <div class="emergency-card"><h3>Notfallkontakte</h3>${d.contacts.length?d.contacts.map(c=>`<div class="contact-line"><div><b>${esc(c.name)}</b><div class="muted">${esc(c.role||'')}</div></div><span>${esc(c.phone||'')}</span></div>`).join(''):'<p>Noch kein Notfallkontakt hinterlegt.</p>'}</div>
+  <div class="emergency-card"><h3>Vorsorge</h3><div class="kv"><b>Patientenverfügung</b><span>${esc(d.patienten)}</span><b>Aufbewahrungsort</b><span>${esc(d.patientenStorage)}</span><b>Vorsorgevollmacht</b><span>${esc(d.vorsorge)}</span><b>ZVR</b><span>${esc(d.zvr)}</span></div></div>
+  <div class="emergency-card"><h3>Medizin</h3><div class="kv"><b>Hausarzt</b><span>${esc(d.doctor)}</span><b>Telefon</b><span>${esc(d.doctorPhone)}</span><b>Allergien</b><span>${esc(d.allergies)}</span><b>Medikamente</b><span>${esc(d.medications)}</span></div></div>
+  <div class="emergency-card"><h3>Person</h3><div class="kv"><b>Name</b><span>${esc(d.personName)}</span><b>Geburtsdatum</b><span>${esc(d.birthDate)}</span><b>Krankenkasse</b><span>${esc(d.insurance)}</span></div></div>
+  <div class="emergency-footer">Erstellt am ${esc(d.created)} · Sterbefall Assistent Deutschland</div></div></section>`;
+}
+function emergencyImageName(){
+  const p=activePerson(),name=(personName(p)||'notfallkarte').toLowerCase().replace(/[^a-z0-9äöüß]+/gi,'-').replace(/^-+|-+$/g,'');
+  return `${name||'notfallkarte'}-notfallkarte.png`;
+}
+function wrapCanvasText(ctx,text,maxWidth){
+  const words=String(text||'').split(/\s+/).filter(Boolean); if(!words.length) return [''];
+  const lines=[]; let line=words[0];
+  for(let i=1;i<words.length;i++){
+    const test=line+' '+words[i];
+    if(ctx.measureText(test).width<=maxWidth) line=test; else {lines.push(line); line=words[i];}
+  }
+  lines.push(line); return lines;
+}
+function drawCanvasLabelValue(ctx,label,value,x,y,w){
+  ctx.font='700 28px system-ui, Arial'; ctx.fillStyle='#2e3b40'; ctx.fillText(label,x,y);
+  ctx.font='28px system-ui, Arial'; ctx.fillStyle='#44545b';
+  const lines=wrapCanvasText(ctx,value||'—',w);
+  let yy=y+36;
+  lines.forEach(line=>{ctx.fillText(line,x,yy); yy+=34;});
+  return yy+8;
+}
+async function renderEmergencyCardCanvas(){
+  const d=emergencyCardData(); if(!d) throw new Error('Keine aktive Person');
+  const canvas=document.createElement('canvas'); canvas.width=1240; canvas.height=1754;
+  const ctx=canvas.getContext('2d'); const W=canvas.width,H=canvas.height;
+  ctx.fillStyle='#f5f7f8'; ctx.fillRect(0,0,W,H);
+
+  const roundRect=(x,y,w,h,r,fill,stroke)=>{
+    ctx.beginPath();
+    ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r);
+    if(fill){ctx.fillStyle=fill;ctx.fill();} if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke();}
+  };
+  roundRect(55,55,W-110,H-110,36,'#ffffff','#d8e0e4');
+  roundRect(95,95,W-190,210,28,'#d9473e',null);
+  ctx.fillStyle='#fff'; ctx.font='bold 64px system-ui, Arial'; ctx.fillText('NOTFALL',145,180);
+  ctx.font='34px system-ui, Arial'; ctx.fillText(`Wichtige Informationen für ${d.personName}`,145,235);
+  ctx.font='24px system-ui, Arial'; ctx.fillText('Zum Vorzeigen bei Notfällen / Krankenhaus / Angehörigenkontakt',145,275);
+
+  const section=(title,yStart,height)=>{
+    roundRect(95,yStart,W-190,height,24,'#fbfbfc','#e4e8eb');
+    ctx.fillStyle='#233238'; ctx.font='700 34px system-ui, Arial'; ctx.fillText(title,125,yStart+52);
+    return yStart+98;
+  };
+
+  let y=355;
+  let yy=section('Notfallkontakte',y,260);
+  if(d.contacts.length){
+    d.contacts.forEach(c=>{
+      ctx.font='700 28px system-ui, Arial'; ctx.fillStyle='#2e3b40'; ctx.fillText(c.name||'—',125,yy);
+      ctx.font='24px system-ui, Arial'; ctx.fillStyle='#647279'; ctx.fillText(c.role||'',125,yy+30);
+      ctx.font='700 28px system-ui, Arial'; ctx.fillStyle='#2e3b40'; ctx.textAlign='right'; ctx.fillText(c.phone||'',W-125,yy+12); ctx.textAlign='left';
+      yy+=62;
+    });
+  } else {
+    ctx.font='28px system-ui, Arial'; ctx.fillStyle='#647279'; ctx.fillText('Noch kein Notfallkontakt hinterlegt.',125,yy);
+  }
+
+  y=635; yy=section('Vorsorge',y,295);
+  yy=drawCanvasLabelValue(ctx,'Patientenverfügung',d.patienten,125,yy,W-250);
+  yy=drawCanvasLabelValue(ctx,'Aufbewahrungsort',d.patientenStorage,125,yy,W-250);
+  yy=drawCanvasLabelValue(ctx,'Vorsorgevollmacht',d.vorsorge,125,yy,W-250);
+  yy=drawCanvasLabelValue(ctx,'Zentrales Vorsorgeregister',d.zvr,125,yy,W-250);
+
+  y=960; yy=section('Medizin',y,395);
+  yy=drawCanvasLabelValue(ctx,'Hausarzt',d.doctor + (d.doctorPhone?` (${d.doctorPhone})`:''),125,yy,W-250);
+  yy=drawCanvasLabelValue(ctx,'Allergien',d.allergies,125,yy,W-250);
+  yy=drawCanvasLabelValue(ctx,'Medikamente',d.medications,125,yy,W-250);
+
+  y=1385; yy=section('Person',y,215);
+  yy=drawCanvasLabelValue(ctx,'Name',d.personName,125,yy,W-250);
+  yy=drawCanvasLabelValue(ctx,'Geburtsdatum',d.birthDate,125,yy,W-250);
+  yy=drawCanvasLabelValue(ctx,'Krankenkasse',d.insurance,125,yy,W-250);
+
+  ctx.font='22px system-ui, Arial'; ctx.fillStyle='#708087'; ctx.fillText(`Erstellt am ${d.created} · Sterbefall Assistent Deutschland`,125,H-105);
+  return canvas;
+}
+async function emergencyCardBlob(){
+  const canvas=await renderEmergencyCardCanvas();
+  return await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Bild konnte nicht erstellt werden')),'image/png'));
+}
+function printEmergencyCard(){window.print()}
+async function downloadEmergencyCardImage(){
+  try{
+    const blob=await emergencyCardBlob(),url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download=emergencyImageName();document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
+  }catch(e){toast('Bild konnte nicht erstellt werden')}
+}
+async function shareEmergencyCardImage(){
+  try{
+    const blob=await emergencyCardBlob(),file=new File([blob],emergencyImageName(),{type:'image/png'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})&&navigator.share){
+      await navigator.share({title:`Notfallkarte ${personName(activePerson())}`,text:'Notfallkarte aus dem Sterbefall Assistent Deutschland',files:[file]});
+      return;
+    }
+    await downloadEmergencyCardImage();
+    toast('Bild gespeichert – bitte anschließend manuell teilen');
+  }catch(e){
+    if(e?.name!=='AbortError')toast('Bild konnte nicht geteilt werden');
+  }
+}
 
 function serious(){const p=activePerson();if(!p)return noPerson('Schwere Erkrankung');normalizePerson(p);const tasks=[['Patientenverfügung auffindbar?',isDocDone(p,'patienten'),'documents'],['Vorsorgevollmacht vorhanden?',isDocDone(p,'vorsorge'),'documents'],['Vertrauenspersonen erreichbar?',(p.contacts||[]).length>0,'trusted'],['Hausarzt / Behandler hinterlegt?',!!p.medical?.doctorName,'medical'],['Medikamentenplan und Hinweise geklärt?',!!p.medical?.medPlan||!!p.medical?.medications,'medical'],['Bestattungswünsche bei Bedarf besprochen?',!!p.bestattung?.type||!!p.bestattung?.notes,'bestattung']];return `<section class="screen">${appTop('Schwere Erkrankung',`Für ${personName(p)}`)}<div class="content">${personSwitch(p)}<div class="notice"><b>Dieser Bereich ist eine Organisationshilfe.</b> Akute medizinische Beschwerden gehören in professionelle medizinische Versorgung; im Notfall 112.</div><div class="section-title"><h2>Jetzt prüfen</h2></div><div class="list">${tasks.map(t=>task(t[0],t[1],t[1]?'Erledigt / hinterlegt':'Noch offen',t[2])).join('')}</div><div class="form-card mt16"><h3>Gesprächs- und Organisationspunkte</h3><ul class="plain-list"><li>Wer soll medizinische Gespräche begleiten?</li><li>Wo liegen Vollmachten und Originaldokumente?</li><li>Welche Pflege- oder Unterstützungsangebote werden benötigt?</li><li>Welche Verträge, Haustiere, Kinder oder laufenden Verpflichtungen müssen organisiert werden?</li><li>Wer soll informiert werden, wenn sich die Situation verschlechtert?</li></ul></div></div></section>`}
 
@@ -1424,5 +1561,5 @@ async function migrateLegacy(){let existing=await idbGet('persons','main');if(ex
 async function init(){db=await openDB();await migrateLegacy();if(!state.persons.length)state.persons=(await idbGet('persons','main')||[]).map(normalizePerson);const meta=await idbGet('meta','main')||{};state.activePersonId=meta.activePersonId||state.activePersonId||state.persons[0]?.id||null;state.cases=await idbGet('cases','main')||[];state.settings=await idbGet('settings','main')||state.settings;await detectSharedLink();render();if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{})}
 
 window.toggleFormHelp=toggleFormHelp;
-Object.assign(window,{openShare,toggleSharePin,generateSharePin,createShareLink,emailShareLink,nativeShareLink,copyShareLink,unlockSharedImport,importSharedPerson,cancelSharedImport,go,back,newPerson,editPerson,selectPerson,deletePerson,savePersonBasic,saveProfile,addContact,removeContact,applyTrustedPerson,openDoc,saveDocumentDetail,addDocumentAttachments,viewDocumentAttachment,shareDocumentAttachment,removeDocumentAttachment,openOfficial,openOfficialPdf,openBundledBlank,fillOfficialPdfBundled,installTemplateFromFile,fillOfficialPdfFromWeb,fillOfficialPdfFromFile,applyFormContact,saveFilledForm,refreshFormPreview,printFilledForm,shareCurrentDocumentInfo,downloadLastPdf,shareLastPdf,saveMedical,saveZvr,saveBestattung,saveDigital,saveCase,toggleCaseTask,updatePreview,exportData,importData});
+Object.assign(window,{openShare,toggleSharePin,generateSharePin,createShareLink,emailShareLink,nativeShareLink,copyShareLink,unlockSharedImport,importSharedPerson,cancelSharedImport,printEmergencyCard,shareEmergencyCardImage,downloadEmergencyCardImage,go,back,newPerson,editPerson,selectPerson,deletePerson,savePersonBasic,saveProfile,addContact,removeContact,applyTrustedPerson,openDoc,saveDocumentDetail,addDocumentAttachments,viewDocumentAttachment,shareDocumentAttachment,removeDocumentAttachment,openOfficial,openOfficialPdf,openBundledBlank,fillOfficialPdfBundled,installTemplateFromFile,fillOfficialPdfFromWeb,fillOfficialPdfFromFile,applyFormContact,saveFilledForm,refreshFormPreview,printFilledForm,shareCurrentDocumentInfo,downloadLastPdf,shareLastPdf,saveMedical,saveZvr,saveBestattung,saveDigital,saveCase,toggleCaseTask,updatePreview,exportData,importData});
 window.addEventListener('DOMContentLoaded',init);

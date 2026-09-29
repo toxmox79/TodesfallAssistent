@@ -1,3 +1,15 @@
+# Sterbefall Assistent Deutschland v0.8.6
+
+Neu: Die Notfallkarte kann jetzt direkt genutzt werden.
+
+- **Drucken:** direkte Druckansicht der Notfallkarte
+- **Bild teilen:** erzeugt eine PNG-Datei und teilt sie – sofern das Gerät Dateien teilen unterstützt
+- **Bild speichern:** speichert die Notfallkarte als PNG
+- Die Bilddatei enthält die wichtigsten Notfallinformationen kompakt aufbereitet
+
+Die PNG-Notfallkarte wird lokal im Browser erzeugt. Enthalten sind Name, Geburtsdatum, Krankenkasse,
+Notfallkontakte, Angaben zu Vorsorgedokumenten sowie die wichtigsten medizinischen Hinweise.
+
 # Sterbefall Assistent Deutschland v0.8.5
 
 Neu: Rechtliche Hinweise direkt an den Vorsorgedokumenten.
