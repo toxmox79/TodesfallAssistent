@@ -66,9 +66,109 @@ function back(){const map={'person-edit':'vorsorge','vorsorge-person':'vorsorge'
 function render(){const a=document.getElementById('app');let html='';const r=state.route;if(r==='welcome')html=welcome();else if(r==='home')html=home()+nav();else if(r==='vorsorge')html=vorsorgePeople()+nav();else if(r==='vorsorge-person')html=vorsorgePerson()+nav();else if(r==='person-edit')html=personEdit()+nav();else if(r==='profile')html=profile()+nav();else if(r==='trusted')html=trusted()+nav();else if(r==='documents')html=documents()+nav();else if(r==='document-detail')html=documentDetail()+nav();else if(r==='form-fill')html=formFill()+nav();else if(r==='official-pdf')html=officialPdfScreen()+nav();else if(r==='medical')html=medical()+nav();else if(r==='zvr')html=zvr()+nav();else if(r==='bestattung')html=bestattung()+nav();else if(r==='digital')html=digital()+nav();else if(r==='emergency')html=emergency();else if(r==='serious')html=serious()+nav();else if(r==='case')html=caseScreen()+nav();else if(r==='application')html=applicationScreen()+nav();else if(r==='application-preview')html=applicationPreview()+nav();else if(r==='generator')html=generator()+nav();else if(r==='backup')html=backup()+nav();a.innerHTML=html;}
 function noPerson(title){return `<section class="screen">${appTop(title)}<div class="content"><div class="empty-card"><div class="empty-icon">👥</div><h3>Noch keine Person ausgewählt</h3><p>Lege in der Vorsorge zuerst eine Person an.</p><button class="cta teal full" onclick="go('vorsorge')">Zur Vorsorge</button></div></div></section>`}
 function personSwitch(p){return `<button class="person-switch" onclick="go('vorsorge')"><span>${relationEmoji(p.relation)} ${esc(personName(p))}</span><small>${esc(relationLabel(p.relation))} · Person wechseln</small></button>`}
-function field(label,key,val='',type='text',hint=''){return `<div class="field"><label>${esc(label)}</label><input type="${type}" id="${key}" value="${esc(val||'')}" />${hint?`<small>${esc(hint)}</small>`:''}</div>`}
-function textareaField(label,key,val='',hint=''){return `<div class="field"><label>${esc(label)}</label><textarea id="${key}" rows="4">${esc(val||'')}</textarea>${hint?`<small>${esc(hint)}</small>`:''}</div>`}
-function selectField(label,key,val,opts){return `<div class="field"><label>${esc(label)}</label><select id="${key}">${opts.map(o=>{const [v,l]=String(o).includes('|')?String(o).split('|'):[o,o||'Bitte auswählen'];return `<option value="${esc(v)}" ${v===val?'selected':''}>${esc(l)}</option>`}).join('')}</select></div>`}
+
+const FORM_HELP={
+  ffVHealthAll:'Die bevollmächtigte Person darf Entscheidungen zu ärztlicher Behandlung, Pflege und Versorgung treffen und deinen festgelegten Willen gegenüber Ärzten und Einrichtungen vertreten.',
+  ffVHealthRisk:'Hier geht es um besonders wichtige medizinische Entscheidungen, bei denen die Behandlung oder ihre Ablehnung zum Tod oder zu schweren länger dauernden Gesundheitsschäden führen kann.',
+  ffVRecords:'Die bevollmächtigte Person darf medizinische Unterlagen einsehen und Informationen von Ärzten erhalten. Dafür werden die behandelnden Personen ihr gegenüber von der Schweigepflicht entbunden.',
+  ffVDetention:'Damit darf die bevollmächtigte Person einer Unterbringung in einer geschlossenen Einrichtung zustimmen. Das ist nur unter strengen gesetzlichen Voraussetzungen zulässig und benötigt regelmäßig eine gerichtliche Genehmigung.',
+  ffVRestriction:'Gemeint sind Maßnahmen, die die Bewegungsfreiheit einschränken, zum Beispiel Bettgitter, Fixierungen oder bestimmte Medikamente. Dafür gelten strenge Voraussetzungen und häufig ist eine gerichtliche Genehmigung nötig.',
+  ffVForcedTreatment:'Gemeint ist eine medizinische Behandlung gegen den natürlichen Willen der betroffenen Person. Sie ist nur in engen Ausnahmefällen und unter gesetzlichen Schutzvorgaben zulässig.',
+  ffVHospitalTransfer:'Damit kann die bevollmächtigte Person unter den gesetzlichen Voraussetzungen einer Verbringung ins Krankenhaus zustimmen, wenn dort eine ärztliche Zwangsmaßnahme durchgeführt werden soll.',
+  ffVResidence:'Die bevollmächtigte Person darf entscheiden, wo du wohnst oder betreut wirst, zum Beispiel zu Hause, in einer Pflegeeinrichtung oder an einem anderen geeigneten Ort.',
+  ffVRentalRights:'Die bevollmächtigte Person darf deinen bestehenden Mietvertrag verwalten, kündigen und gegebenenfalls deinen Haushalt auflösen.',
+  ffVNewRental:'Damit darf die bevollmächtigte Person für dich einen neuen Mietvertrag abschließen oder wieder kündigen.',
+  ffVWBVG:'Das betrifft Verträge über Wohnen mit Pflege- oder Betreuungsleistungen, zum Beispiel in einem Pflegeheim oder einer betreuten Wohnform.',
+  ffVAuthorities:'Die bevollmächtigte Person darf dich gegenüber Behörden, Versicherungen, Rentenstellen und Sozialleistungsträgern vertreten und dort notwendige Erklärungen abgeben.',
+  ffVAssetsAll:'Damit darf die bevollmächtigte Person dein Vermögen allgemein verwalten und in deinem Namen rechtliche Geschäfte vornehmen.',
+  ffVAssetDispose:'Die bevollmächtigte Person darf über Vermögenswerte verfügen, zum Beispiel Gegenstände verkaufen. Für Immobilien und bestimmte Geschäfte gelten zusätzliche Formvorschriften.',
+  ffVPayments:'Die bevollmächtigte Person darf für dich Geld, Leistungen oder Wertgegenstände annehmen.',
+  ffVDebts:'Damit darf die bevollmächtigte Person in deinem Namen Verpflichtungen eingehen, aus denen Zahlungen oder Schulden entstehen können.',
+  ffVBank:'Die bevollmächtigte Person darf Bankangelegenheiten erledigen. Banken verlangen in der Praxis häufig zusätzlich ihr eigenes Vollmachtsformular.',
+  ffVGifts:'Die bevollmächtigte Person darf nur Schenkungen vornehmen, soweit dies rechtlich zulässig ist. Größere oder ungewöhnliche Schenkungen sind damit nicht automatisch erlaubt.',
+  ffVExcludedBusiness:'Hier kannst du ausdrücklich festlegen, welche Geschäfte die bevollmächtigte Person trotz der Vollmacht nicht durchführen darf.',
+  ffVPost:'Die bevollmächtigte Person darf deine Post und elektronische Kommunikation entgegennehmen, öffnen und verwalten, soweit die Vollmacht reicht.',
+  ffVCourt:'Damit darf die bevollmächtigte Person dich in gerichtlichen Verfahren vertreten und notwendige Prozesshandlungen vornehmen.',
+  ffVSubPower:'Die bevollmächtigte Person darf einer weiteren Person eine Untervollmacht erteilen. Wenn du das nicht möchtest, wähle Nein.',
+  ffVGuardianship:'Falls trotz der Vollmacht später doch ein gerichtlicher Betreuer nötig wird, soll diese Vertrauensperson bevorzugt als Betreuer/in vorgeschlagen werden.',
+  ffVAfterDeath:'Die bevollmächtigte Person darf nach deinem Tod zunächst weiter aufgrund der Vollmacht handeln. Für bestimmte Geschäfte, etwa Grundbuchangelegenheiten, können trotzdem besondere Formanforderungen gelten.',
+  ffVFurther:'Hier kannst du zusätzliche Wünsche, Einschränkungen oder Anweisungen festhalten, die in den vorherigen Punkten nicht vorkommen.',
+
+  ffPSituationDying:'Gemeint ist eine Situation, in der der Sterbeprozess bereits begonnen hat und nach ärztlicher Einschätzung nicht mehr aufgehalten werden kann.',
+  ffPSituationTerminal:'Gemeint ist das Endstadium einer unheilbaren, tödlich verlaufenden Krankheit. Der Tod muss dabei nicht unmittelbar bevorstehen.',
+  ffPSituationBrain:'Gemeint ist eine schwere, nicht mehr rückgängig zu machende Gehirnschädigung, durch die Einsicht, Entscheidungen und Kontakt zur Umwelt dauerhaft verloren gegangen sind.',
+  ffPSituationDementia:'Gemeint ist ein sehr weit fortgeschrittener Abbau geistiger Fähigkeiten, bei dem auch Essen und Trinken trotz Hilfe nicht mehr auf natürliche Weise möglich sind.',
+  ffPSituationOwn:'Hier kannst du eine weitere konkrete Krankheitssituation beschreiben, für die deine Patientenverfügung gelten soll.',
+  ffPLife:'Hier legst du fest, ob Ärzte in den zuvor ausgewählten Situationen lebensverlängernde Behandlungen einsetzen sollen. Einzelne Maßnahmen wie Beatmung, Ernährung oder Wiederbelebung werden darunter noch genauer festgelegt.',
+  ffPPain:'Hier geht es darum, Schmerzen, Atemnot, Angst und andere Beschwerden zu lindern. Sehr starke Medikamente können dabei als Nebenwirkung Müdigkeit oder Bewusstseinsdämpfung verursachen.',
+  ffPAcceptShortening:'Manche wirksamen Medikamente gegen starke Schmerzen oder Atemnot können unbeabsichtigt die Lebenszeit verkürzen. Hier erklärst du, ob du dieses mögliche Risiko zur wirksamen Beschwerdelinderung akzeptierst.',
+  ffPNutrition:'Künstliche Ernährung bedeutet zum Beispiel Ernährung über eine Magensonde. Flüssigkeit kann auch über eine Infusion gegeben werden. Hier legst du fest, ob und wofür diese Maßnahmen eingesetzt werden sollen.',
+  ffPResuscitation:'Wiederbelebung bedeutet Maßnahmen bei Herz- oder Atemstillstand, zum Beispiel Herzdruckmassage, Beatmung und gegebenenfalls elektrische Schocks.',
+  ffPNoEmergencyDoctor:'Diese Festlegung betrifft Situationen, in denen deine Patientenverfügung eindeutig gilt und du Wiederbelebung ablehnst. Im Notfall muss der Wille schnell und eindeutig erkennbar sein.',
+  ffPResuscitationAll:'Hier kannst du zusätzlich bestimmen, ob deine Entscheidung zur Wiederbelebung auch außerhalb der zuvor beschriebenen schweren Krankheitssituationen gelten soll.',
+  ffPVentilation:'Künstliche Beatmung unterstützt oder ersetzt die eigene Atmung, zum Beispiel über einen Beatmungsschlauch oder eine Beatmungsmaske.',
+  ffPDialysis:'Dialyse ist eine Blutwäsche. Sie übernimmt bei schwerem Nierenversagen einen Teil der Aufgabe der Nieren.',
+  ffPAntibiotics:'Antibiotika behandeln bakterielle Infektionen. Hier entscheidest du, ob sie zur Lebensverlängerung, nur zur Beschwerdelinderung oder gar nicht eingesetzt werden sollen.',
+  ffPBlood:'Gemeint sind Bluttransfusionen oder einzelne Blutbestandteile. Sie können zum Beispiel bei schwerer Blutarmut oder Blutverlust eingesetzt werden.',
+  ffPPlace:'Hier kannst du festhalten, wo du möglichst behandelt und begleitet werden möchtest, zum Beispiel zu Hause, im Hospiz oder im Krankenhaus.',
+  ffPConfidentiality:'Hier legst du fest, welche Personen medizinische Informationen erhalten dürfen und wem Ärzte Auskunft geben dürfen.',
+  ffPOtherDirectives:'Hier trägst du ein, ob zusätzlich eine Vorsorgevollmacht oder Betreuungsverfügung besteht und wo sie zu finden ist.',
+  ffPOrgan:'Eine Organspende kann in einzelnen Situationen Maßnahmen erfordern, die mit einer Patientenverfügung kollidieren können. Hier legst du fest, welcher Wunsch in diesem Fall Vorrang haben soll.',
+  ffValues:'Hier kannst du persönliche Werte, religiöse Überzeugungen, Ängste oder Vorstellungen zu Lebensqualität festhalten. Das hilft bei der Auslegung deiner Wünsche.',
+
+  ffBPrimarySection:'Diese Person soll vom Gericht bevorzugt als Betreuer/in bestellt werden, wenn tatsächlich eine rechtliche Betreuung erforderlich wird.',
+  ffBFallbackSection:'Diese Person soll ersatzweise Betreuer/in werden, wenn die zuerst gewünschte Person nicht zur Verfügung steht oder nicht bestellt werden kann.',
+  ffBExcludeSection:'Diese Person soll ausdrücklich nicht als Betreuer/in bestellt werden.',
+  ffBWish1:'Hier kannst du konkrete Wünsche für eine mögliche Betreuung festhalten, zum Beispiel zur Wohnung, Pflege, Gesundheit oder Vermögensverwaltung.',
+  ffBWish2:'Hier kannst du einen weiteren konkreten Wunsch für eine mögliche Betreuung festhalten.',
+  ffBWish3:'Hier kannst du einen weiteren konkreten Wunsch für eine mögliche Betreuung festhalten.',
+  ffBWish4:'Hier kannst du einen weiteren konkreten Wunsch für eine mögliche Betreuung festhalten.',
+
+  ffBankAddress:'Trage hier die Bank oder Sparkasse ein, bei der die Vollmacht gelten soll. Viele Institute möchten die Vollmacht zusätzlich mit ihrem eigenen Formular aufnehmen.',
+
+  ffProviders:'Du legst fest, ob die Schweigepflichtentbindung für alle behandelnden Stellen oder nur für ausdrücklich genannte Ärzte und Einrichtungen gelten soll.',
+  ffNamedProviders:'Wenn du nur bestimmte Stellen freigibst, trägst du sie hier möglichst eindeutig ein.',
+  ffDiagnosis:'Erlaubt die Weitergabe von Diagnosen und medizinischen Befunden an die ausgewählte Person.',
+  ffTreatment:'Erlaubt Informationen über Behandlungen, Operationen und Therapien.',
+  ffMedication:'Erlaubt Informationen darüber, welche Medikamente eingenommen oder verordnet werden.',
+  ffCare:'Erlaubt Informationen zur Pflege, Entlassung aus Krankenhaus oder Einrichtung und zur weiteren Versorgung.',
+  ffNotes:'Hier kannst du die Entbindung einschränken, zum Beispiel auf einen bestimmten Zweck, Zeitraum oder bestimmte Informationen.',
+
+  ffFuneralType:'Hier kannst du die gewünschte Art der Bestattung festhalten. Das ist ein Wunsch für die Angehörigen und sollte möglichst mit ihnen besprochen werden.',
+  ffUndertaker:'Wenn bereits ein Bestattungsvorsorgevertrag besteht oder ein bestimmter Bestatter gewünscht ist, kannst du ihn hier eintragen.',
+
+  ffOrganDecision:'Wähle genau eine Variante: vollständige Zustimmung, Zustimmung mit Ausnahmen, nur bestimmte Organe/Gewebe, Ablehnung oder Entscheidung durch eine andere Person.',
+  ffOrganLimits:'Hier werden bei eingeschränkter Zustimmung die Organe oder Gewebe genannt, die ausgeschlossen oder ausdrücklich freigegeben werden sollen.',
+  ffOrganNotes:'Hier können besondere Hinweise ergänzt werden. Die eigentliche Entscheidung sollte trotzdem eindeutig aus einer der fünf Auswahlmöglichkeiten hervorgehen.',
+
+  ffHeirs:'Hier notierst du, wer später Erbe werden soll. Das ist nur eine Vorbereitung: Ein privates Testament muss grundsätzlich vollständig eigenhändig geschrieben und unterschrieben werden.',
+  ffLegacies:'Ein Vermächtnis bedeutet, dass eine Person einen bestimmten Gegenstand oder Geldbetrag erhalten soll, ohne dadurch automatisch Erbe zu werden.',
+  ffTestamentNotes:'Hier kannst du Ersatzerben, Bedingungen oder den Wunsch nach Testamentsvollstreckung vorbereiten. Für die endgültige Gestaltung können rechtliche oder notarielle Beratung sinnvoll sein.',
+  ffTestamentStorage:'Hier notierst du, wo das später wirksam errichtete Testament aufbewahrt wird. Das Vorbereitungsblatt selbst ist kein Testament.'
+};
+
+function helpText(key){return FORM_HELP[key]||''}
+function helpMarkup(key,label=''){
+  const text=helpText(key);if(!text)return '';
+  return `<button type="button" class="help-btn no-print" aria-label="Erklärung zu ${esc(label)}" aria-expanded="false" onclick="toggleFormHelp('${key}',this)">?</button>`;
+}
+function helpBox(key){
+  const text=helpText(key);if(!text)return '';
+  return `<div class="field-help no-print" id="help_${key}" hidden>${esc(text)}</div>`;
+}
+function toggleFormHelp(key,btn){
+  const box=document.getElementById('help_'+key);if(!box)return;
+  const opening=box.hidden;
+  document.querySelectorAll('.field-help:not([hidden])').forEach(el=>{
+    if(el!==box){el.hidden=true;const b=el.parentElement?.querySelector('.help-btn');if(b)b.setAttribute('aria-expanded','false')}
+  });
+  box.hidden=!opening;
+  if(btn)btn.setAttribute('aria-expanded',opening?'true':'false');
+}
+
+function field(label,key,val='',type='text',hint=''){return `<div class="field"><div class="field-label-row"><label for="${key}">${esc(label)}</label>${helpMarkup(key,label)}</div>${helpBox(key)}<input type="${type}" id="${key}" value="${esc(val||'')}" />${hint?`<small>${esc(hint)}</small>`:''}</div>`}
+function textareaField(label,key,val='',hint=''){return `<div class="field"><div class="field-label-row"><label for="${key}">${esc(label)}</label>${helpMarkup(key,label)}</div>${helpBox(key)}<textarea id="${key}" rows="4">${esc(val||'')}</textarea>${hint?`<small>${esc(hint)}</small>`:''}</div>`}
+function selectField(label,key,val,opts){return `<div class="field"><div class="field-label-row"><label for="${key}">${esc(label)}</label>${helpMarkup(key,label)}</div>${helpBox(key)}<select id="${key}">${opts.map(o=>{const [v,l]=String(o).includes('|')?String(o).split('|'):[o,o||'Bitte auswählen'];return `<option value="${esc(v)}" ${v===val?'selected':''}>${esc(l)}</option>`}).join('')}</select></div>`}
 function task(title,done,meta,route){return `<button class="list-item ${done?'done':''}" onclick="go('${route}')"><div class="dot">${done?'✓':''}</div><div class="grow"><b>${esc(title)}</b><div class="meta">${esc(meta)}</div></div><div class="chev">›</div></button>`}
 function openOfficial(k){const u=OFFICIAL[k];if(u)window.open(u,'_blank','noopener')}
 
@@ -111,12 +211,12 @@ async function removeDocumentAttachment(i){const p=activePerson(),k=state.docKey
 
 
 function personAddress(p){const x=p?.profile||{};return [x.street,[x.zip,x.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')}
-function selectablePeopleOptions(owner,selected=''){return state.persons.filter(x=>x.id!==owner?.id).map(x=>{const v=`person:${x.id}`,isSelected=selected===v||selected===x.id;return `<option value="${esc(v)}" ${isSelected?'selected':''}>👤 ${esc(personName(x))} – ${esc(relationLabel(x.relation))}</option>`}).join('')}
+function selectablePeopleOptions(owner,selected=''){return state.persons.filter(x=>x.id!==owner?.id).map(x=>{const v=`person:${x.id}`,isSelected=selected===v||selected===x.id,rel=relationBetween(owner,x);return `<option value="${esc(v)}" ${isSelected?'selected':''}>👤 ${esc(personName(x))} – ${esc(rel)}</option>`}).join('')}
 function contactOptions(p,selected=''){const cs=p.contacts||[];const people=selectablePeopleOptions(p,selected);const contacts=cs.map(c=>{const v=`contact:${c.id}`,isSelected=selected===v||selected===c.id;return `<option value="${esc(v)}" ${isSelected?'selected':''}>☎ ${esc(c.name)}${c.role?` – ${esc(c.role)}`:''}</option>`}).join('');return `<option value="">Bitte auswählen / manuell eingeben</option>${people?`<optgroup label="Gespeicherte Personen">${people}</optgroup>`:''}${contacts?`<optgroup label="Zusätzliche Kontakte">${contacts}</optgroup>`:''}`}
 function resolveSelectedContact(owner,selection){if(!selection)return null;if(selection.startsWith('person:')){const id=selection.slice(7),q=state.persons.find(x=>x.id===id);if(!q)return null;const x=q.profile||{};return {source:'person',id:q.id,name:personName(q),role:relationLabel(q.relation),phone:x.phone||'',email:x.email||'',address:personAddress(q)}}if(selection.startsWith('contact:')){const id=selection.slice(8),c=(owner?.contacts||[]).find(x=>x.id===id);return c?{...c,source:'contact'}:null}const c=(owner?.contacts||[]).find(x=>x.id===selection);if(c)return {...c,source:'contact'};const q=state.persons.find(x=>x.id===selection&&x.id!==owner?.id);if(q){const x=q.profile||{};return {source:'person',id:q.id,name:personName(q),role:relationLabel(q.relation),phone:x.phone||'',email:x.email||'',address:personAddress(q)}}return null}
 function commonIdentityFields(p){const x=p.profile||{};return `<div class="form-card"><h3>Person</h3><div class="autofill-badge">✓ aus Stammdaten übernommen</div><div class="two">${field('Vorname','ffFirst',x.firstName)}${field('Nachname','ffLast',x.lastName)}</div><div class="two">${field('Geburtsdatum','ffBirth',x.birthDate,'date')}${field('Geburtsort','ffBirthPlace',x.birthPlace)}</div>${field('Straße / Hausnummer','ffStreet',x.street)}<div class="two">${field('PLZ','ffZip',x.zip)}${field('Ort','ffCity',x.city)}</div><div class="two">${field('Telefon','ffPhone',x.phone,'tel')}${field('E-Mail','ffEmail',x.email,'email')}</div></div>`}
 function agentFields(p,fd={}){return `<div class="form-card"><h3>Vertrauensperson / Bevollmächtigte Person</h3><div class="field"><label>Aus gespeicherten Personen oder Kontakten übernehmen</label><select id="ffContact" onchange="applyFormContact()">${contactOptions(p,fd.contactId||'')}</select></div><div class="two">${field('Name, Vorname','ffAgentName',fd.agentName||'')}${field('Beziehung / Rolle','ffAgentRole',fd.agentRole||'')}</div><div class="two">${field('Geburtsdatum','ffAgentBirth',fd.agentBirth||'','date')}${field('Geburtsort','ffAgentBirthPlace',fd.agentBirthPlace||'')}</div>${field('Anschrift','ffAgentAddress',fd.agentAddress||'')}<div class="two">${field('Telefon','ffAgentPhone',fd.agentPhone||'','tel')}${field('E-Mail','ffAgentEmail',fd.agentEmail||'','email')}</div></div>`}
-function formFill(){const p=activePerson();if(!p)return noPerson('Formular');const k=state.docKey||'vorsorge',d=DOCS[k],obj=normalizePerson(p).documents[k]||{},fd=obj.formData||{};let body='';if(k==='vorsorge')body=formVorsorge(p,fd);else if(k==='patienten')body=formPatienten(p,fd);else if(k==='betreuung')body=formBetreuung(p,fd);else if(k==='bank')body=formBank(p,fd);else if(k==='schweigepflicht')body=formSchweigepflicht(p,fd);else if(k==='bestattung')body=formBestattung(p,fd);else if(k==='organe')body=formOrgane(p,fd);else if(k==='testament')body=formTestament(p,fd);return `<section class="screen form-fill-page">${appTop(d.title,`Direkt ausfüllen für ${personName(p)}`)}<div class="content"><div class="notice"><b>Automatisch vorausgefüllt:</b> Stammdaten werden übernommen. Änderungen hier gelten zunächst nur für dieses Formular und überschreiben die Stammdaten nicht.</div>${body}<div class="row mt16 no-print"><button class="cta teal full" onclick="saveFilledForm()">Speichern</button><button class="cta ghost full" onclick="refreshFormPreview()">Vorschau</button></div><div class="row mt10 no-print"><button class="cta full" onclick="printFilledForm()">🖨 Drucken / PDF</button><button class="cta ghost full" onclick="shareCurrentDocumentInfo()">↗ Versenden</button></div><div id="formPreview" class="print-document">${renderFilledDocument(k,p,fd)}</div></div></section>`}
+function formFill(){const p=activePerson();if(!p)return noPerson('Formular');const k=state.docKey||'vorsorge',d=DOCS[k],obj=normalizePerson(p).documents[k]||{},fd=obj.formData||{};let body='';if(k==='vorsorge')body=formVorsorge(p,fd);else if(k==='patienten')body=formPatienten(p,fd);else if(k==='betreuung')body=formBetreuung(p,fd);else if(k==='bank')body=formBank(p,fd);else if(k==='schweigepflicht')body=formSchweigepflicht(p,fd);else if(k==='bestattung')body=formBestattung(p,fd);else if(k==='organe')body=formOrgane(p,fd);else if(k==='testament')body=formTestament(p,fd);return `<section class="screen form-fill-page">${appTop(d.title,`Direkt ausfüllen für ${personName(p)}`)}<div class="content"><div class="notice"><b>Automatisch vorausgefüllt:</b> Stammdaten werden übernommen. Änderungen hier gelten zunächst nur für dieses Formular und überschreiben die Stammdaten nicht.</div><div class="help-intro no-print"><span class="help-btn static">?</span><span>Bei schwierigen Begriffen auf das Fragezeichen tippen – du erhältst eine kurze Erklärung in einfacher Sprache.</span></div>${body}<div class="row mt16 no-print"><button class="cta teal full" onclick="saveFilledForm()">Speichern</button><button class="cta ghost full" onclick="refreshFormPreview()">Vorschau</button></div><div class="row mt10 no-print"><button class="cta full" onclick="printFilledForm()">🖨 Drucken / PDF</button><button class="cta ghost full" onclick="shareCurrentDocumentInfo()">↗ Versenden</button></div><div id="formPreview" class="print-document">${renderFilledDocument(k,p,fd)}</div></div></section>`}
 
 function ynField(label,id,val=''){return selectField(label,id,val||'',['|Bitte auswählen','yes|Ja','no|Nein'])}
 function formVorsorge(p,fd){return `${commonIdentityFields(p)}${agentFields(p,fd)}
@@ -185,7 +285,7 @@ ${selectField('Organspende und Patientenverfügung','ffPOrgan',fd.pOrgan||'',['|
 ${textareaField('Persönliche Wertvorstellungen / religiöse oder sonstige Wünsche','ffValues',fd.values||'')}
 </div>`}
 
-function miniPerson(prefix,title,fd={}){return `<div class="form-card"><h3>${title}</h3>${field('Name, Vorname',prefix+'Name',fd[prefix+'Name']||'')}<div class="two">${field('Geburtsdatum',prefix+'Birth',fd[prefix+'Birth']||'','date')}${field('Geburtsort',prefix+'BirthPlace',fd[prefix+'BirthPlace']||'')}</div>${field('Adresse',prefix+'Address',fd[prefix+'Address']||'')}${field('Telefon, Telefax, E-Mail',prefix+'Contact',fd[prefix+'Contact']||'')}</div>`}
+function miniPerson(prefix,title,fd={}){const hk=prefix+'Section';return `<div class="form-card"><div class="section-help-title"><h3>${title}</h3>${helpMarkup(hk,title)}</div>${helpBox(hk)}${field('Name, Vorname',prefix+'Name',fd[prefix+'Name']||'')}<div class="two">${field('Geburtsdatum',prefix+'Birth',fd[prefix+'Birth']||'','date')}${field('Geburtsort',prefix+'BirthPlace',fd[prefix+'BirthPlace']||'')}</div>${field('Adresse',prefix+'Address',fd[prefix+'Address']||'')}${field('Telefon, Telefax, E-Mail',prefix+'Contact',fd[prefix+'Contact']||'')}</div>`}
 function formBetreuung(p,fd){return `${commonIdentityFields(p)}${miniPerson('ffBPrimary','Zu meinem Betreuer / meiner Betreuerin soll bestellt werden',fd)}${miniPerson('ffBFallback','Falls diese Person nicht bestellt werden kann, soll folgende Person bestellt werden',fd)}${miniPerson('ffBExclude','Auf keinen Fall soll folgende Person zum Betreuer / zur Betreuerin bestellt werden',fd)}<div class="form-card"><h3>Wünsche zur Wahrnehmung meiner Angelegenheiten</h3>${textareaField('1.','ffBWish1',fd.ffBWish1||'')}${textareaField('2.','ffBWish2',fd.ffBWish2||'')}${textareaField('3.','ffBWish3',fd.ffBWish3||'')}${textareaField('4.','ffBWish4',fd.ffBWish4||'')}</div>`}
 
 function formBank(p,fd){return `${commonIdentityFields(p)}${agentFields(p,fd)}<div class="notice"><b>Originalstruktur:</b> Das abgestimmte BMJ/DK-Formular ist keine frei konfigurierbare Kontovollmacht. Es gilt für alle bestehenden und künftigen Konten/Depots bei der angegebenen Bank/Sparkasse sowie dort gemietete Schrankfächer. Es enthält ausdrücklich, dass die Vollmacht nicht mit dem Tod erlischt.</div><div class="form-card"><h3>Bank / Sparkasse</h3>${textareaField('Name und Anschrift der Bank/Sparkasse','ffBankAddress',fd.bankAddress||'')}</div><div class="form-card"><h3>Feststehender Umfang des Originalformulars</h3><ul class="plain-list"><li>Verfügungen über Guthaben und Zahlungsaufträge</li><li>Einlagen- und Girokonten auf Guthabenbasis einrichten</li><li>Eingeräumte Kredite und bankübliche vorübergehende Überziehungen nutzen</li><li>Wertpapier-/Devisengeschäfte im im Formular genannten Umfang</li><li>Mitteilungen, Kontoauszüge und Erklärungen entgegennehmen</li><li>Freistellungsaufträge erteilen/ändern</li><li>Debitkarten sowie Online-/Telefonbanking beantragen</li><li>Zugang zu gemieteten Schrankfächern</li><li>Keine Untervollmacht</li><li>Widerruf jederzeit möglich</li><li>Vollmacht erlischt nicht mit dem Tod</li></ul></div>`}
@@ -194,7 +294,7 @@ function formSchweigepflicht(p,fd){return `${commonIdentityFields(p)}${agentFiel
 function formBestattung(p,fd){const b=p.bestattung||{};return `${commonIdentityFields(p)}<div class="notice"><b>App-Vorlage:</b> Für Bestattungswünsche gibt es kein bundeseinheitliches amtliches Standardformular.</div><div class="form-card"><h3>Bestattungswünsche</h3>${selectField('Bestattungsart','ffFuneralType',fd.funeralType||b.type||'',['|Noch offen','Erdbestattung','Feuerbestattung','Seebestattung','Baumbestattung','Andere'])}${field('Gewünschter Friedhof / Ort','ffFuneralPlace',fd.funeralPlace||b.place||'')}${field('Bestatter / Vorsorgevertrag','ffUndertaker',fd.undertaker||b.undertaker||'')}${textareaField('Trauerfeier, Musik, Blumen, Kleidung, Anzeigen','ffCeremony',fd.ceremony||b.ceremony||'')}${textareaField('Weitere Wünsche','ffNotes',fd.notes||b.notes||'')}</div>`}
 function formOrgane(p,fd){return `${commonIdentityFields(p)}<div class="notice"><b>Abgleich mit dem offiziellen Organspendeausweis:</b> Es darf genau eine der fünf Entscheidungsmöglichkeiten ausgewählt werden.</div><div class="form-card"><h3>Erklärung zur Organ- und Gewebespende</h3>${selectField('Entscheidung','ffOrganDecision',fd.organDecision||'',['|Bitte auswählen','yesAll|JA, Entnahme von Organen und Geweben gestattet','yesExcept|JA, mit Ausnahme bestimmter Organe/Gewebe','yesOnly|JA, jedoch nur für bestimmte Organe/Gewebe','no|NEIN, Entnahme widersprochen','delegate|Über JA oder NEIN soll eine andere Person entscheiden'])}${textareaField('Ausnahmen bzw. nur freigegebene Organe/Gewebe','ffOrganLimits',fd.organLimits||'')}${textareaField('Platz für Anmerkungen / besondere Hinweise','ffOrganNotes',fd.organNotes||'')}${agentFields(p,fd)}</div>`}
 function formTestament(p,fd){return `${commonIdentityFields(p)}<div class="notice"><b>Vorbereitungsblatt – kein amtliches Formular und kein fertiges Testament:</b> Ein eigenhändiges Testament muss grundsätzlich eigenhändig geschrieben und unterschrieben werden.</div><div class="form-card"><h3>Erbwünsche vorbereiten</h3>${textareaField('Personen / Institutionen, die bedacht werden sollen','ffHeirs',fd.heirs||'')}${textareaField('Besondere Vermächtnisse / Gegenstände','ffLegacies',fd.legacies||'')}${textareaField('Wünsche zu Ersatzerben / Bedingungen / Testamentsvollstreckung','ffTestamentNotes',fd.testamentNotes||'')}${field('Geplanter Aufbewahrungsort','ffTestamentStorage',fd.testamentStorage||'')}</div>`}
-function checkLine(id,label,on){return `<label class="checkline"><input type="checkbox" id="${id}" ${on?'checked':''}> ${esc(label)}</label>`}
+function checkLine(id,label,on){return `<div class="checkline-help-wrap"><div class="checkline-row"><label class="checkline" for="${id}"><input type="checkbox" id="${id}" ${on?'checked':''}> <span>${esc(label)}</span></label>${helpMarkup(id,label)}</div>${helpBox(id)}</div>`}
 function choiceField(label,id,val=''){return selectField(label,id,val||'',['|Bitte auswählen','want|Ich wünsche diese Maßnahme','refuse|Ich lehne diese Maßnahme ab','palliative|Nur zur Symptomlinderung / palliativ','individual|Individuell – siehe weitere Festlegungen'])}
 function applyFormContact(){const p=activePerson(),sel=val('ffContact'),c=resolveSelectedContact(p,sel);if(!c)return;setVal('ffAgentName',c.name);setVal('ffAgentRole',c.role);setVal('ffAgentPhone',c.phone);setVal('ffAgentEmail',c.email);setVal('ffAgentAddress',c.address||'');if(sel.startsWith('person:')){const q=state.persons.find(x=>x.id===sel.slice(7));setVal('ffAgentBirth',q?.profile?.birthDate||'');setVal('ffAgentBirthPlace',q?.profile?.birthPlace||'')}refreshFormPreview()}
 function setVal(id,v){const e=document.getElementById(id);if(e)e.value=v||''}
@@ -259,7 +359,10 @@ const APPLICATIONS={
     authority:'Renten Service der Deutschen Post',
     officialForm:'Änderungsanzeige und Anträge im Renten Service – Teil 7',
     sourceStand:'Deutsche Post, Stand 03/2026',
-    online:'https://www.deutschepost.de/de/r/rentenservice/downloadcenter.html',
+    applyUrl:'https://www.deutschepost.de/dam/jcr:ccb44b2b-ade2-4956-975a-6b6627f5e17f/dp-rs-aenderungsformular-rentenservice.pdf',
+    applyLabel:'Original-Antrag (PDF) öffnen',
+    infoUrl:'https://www.deutschepost.de/de/r/rentenservice/downloadcenter.html',
+    infoLabel:'Renten Service: Hinweise & Formulare',
     pdf:'https://www.deutschepost.de/dam/jcr:ccb44b2b-ade2-4956-975a-6b6627f5e17f/dp-rs-aenderungsformular-rentenservice.pdf',
     note:'Für Ehe- oder Lebenspartner. Der schnelle Vorschuss wird beim Renten Service beantragt; der reguläre Antrag auf Witwen-/Witwerrente bei der Deutschen Rentenversicherung bleibt zusätzlich erforderlich.'
   },
@@ -269,7 +372,10 @@ const APPLICATIONS={
     authority:'Deutsche Rentenversicherung',
     officialForm:'R0500 – Antrag auf Hinterbliebenenrente',
     sourceStand:'R0500 Version 33, Stand 01.07.2026',
-    online:'https://www.eservice-drv.de/eantrag/hinweis-ohne-karte-direkt.seam?formular=r0500',
+    applyUrl:'https://www.eservice-drv.de/eantrag/hinweis-ohne-karte-direkt.seam?formular=r0500',
+    applyLabel:'DRV eAntrag R0500 starten',
+    infoUrl:'https://www.deutsche-rentenversicherung.de/SharedDocs/Formulare/DE/_pdf/R0500.html',
+    infoLabel:'DRV Informationen zu R0500',
     pdf:'https://www.deutsche-rentenversicherung.de/SharedDocs/Formulare/DE/_pdf/R0500.pdf?__blob=publicationFile',
     note:'Die App bereitet die häufig benötigten Kernangaben vor. Das offizielle R0500 enthält zusätzliche individuelle Fragen, insbesondere zu Versicherungszeiten, Einkommen und Sonderfällen.'
   },
@@ -279,7 +385,10 @@ const APPLICATIONS={
     authority:'Deutsche Rentenversicherung',
     officialForm:'R0500 plus Anlage R0610',
     sourceStand:'R0500 / R0610',
-    online:'https://www.eservice-drv.de/eantrag/hinweis-ohne-karte-direkt.seam?formular=r0500',
+    applyUrl:'https://www.eservice-drv.de/eantrag/hinweis-ohne-karte-direkt.seam?formular=r0500',
+    applyLabel:'DRV eAntrag Hinterbliebenenrente starten',
+    infoUrl:'https://www.deutsche-rentenversicherung.de/SharedDocs/Formulare/DE/_pdf/R0610.html',
+    infoLabel:'DRV Informationen zu R0610',
     pdf:'https://www.deutsche-rentenversicherung.de/SharedDocs/Formulare/DE/_pdf/R0610.pdf?__blob=publicationFile',
     note:'Für einen Erstantrag wird der Antrag auf Hinterbliebenenrente R0500 zusammen mit der Anlage R0610 benötigt. Bei bereits gezahlter Waisenrente können andere Formulare einschlägig sein.'
   },
@@ -289,12 +398,50 @@ const APPLICATIONS={
     authority:'Zuständiges Sozialamt',
     officialForm:'Kein bundeseinheitliches Formular',
     sourceStand:'§ 74 SGB XII',
-    online:'https://www.gesetze-im-internet.de/sgb_12/__74.html',
+    applyUrl:'',
+    applyLabel:'',
+    infoUrl:'https://www.gesetze-im-internet.de/sgb_12/__74.html',
+    infoLabel:'Gesetzliche Grundlage § 74 SGB XII',
     pdf:'',
     note:'Die Formulare unterscheiden sich je nach Sozialamt. Die App erstellt deshalb einen vollständigen Antragsdatensatz und ein druckbares Anschreiben, das zusammen mit einem örtlichen Formular verwendet werden kann.'
   }
 };
 
+function genderedRelation(base,p){
+  const sal=(p?.profile?.salutation||'').toLowerCase();
+  if(base==='child') return sal==='herr'?'Sohn':sal==='frau'?'Tochter':'Kind';
+  if(base==='parent') return sal==='herr'?'Vater':sal==='frau'?'Mutter':'Elternteil';
+  if(base==='sibling') return sal==='herr'?'Bruder':sal==='frau'?'Schwester':'Geschwister';
+  if(base==='partner') return sal==='herr'?'Partner':sal==='frau'?'Partnerin':'Partner/in';
+  return base;
+}
+function relationBetween(subject,other){
+  if(!subject||!other)return '';
+  if(subject.id===other.id)return 'dieselbe Person';
+  // Wenn die Bezugsperson "Ich" ist, ist die gespeicherte Beziehung direkt nutzbar.
+  if(subject.relation==='self'){
+    if(other.relation==='partner')return genderedRelation('partner',other);
+    if(other.relation==='mother')return 'Mutter';
+    if(other.relation==='father')return 'Vater';
+    if(other.relation==='child')return genderedRelation('child',other);
+    if(other.relation==='sibling')return genderedRelation('sibling',other);
+    if(other.relation==='other')return 'Andere Person';
+  }
+  // Wenn die ausgewählte Person "Ich" ist, wird die Beziehung zur Bezugsperson umgedreht.
+  if(other.relation==='self'){
+    if(subject.relation==='partner')return genderedRelation('partner',other);
+    if(subject.relation==='mother'||subject.relation==='father')return genderedRelation('child',other);
+    if(subject.relation==='child')return genderedRelation('parent',other);
+    if(subject.relation==='sibling')return genderedRelation('sibling',other);
+    return 'Angehörige Person';
+  }
+  // Zwischen zwei anderen gespeicherten Personen nicht raten.
+  return 'Beziehung auswählen';
+}
+function applicantRelationOptions(selected=''){
+  const vals=['Ehepartner/in','Lebenspartner/in','Partner/in','Mutter','Vater','Sohn','Tochter','Kind','Bruder','Schwester','Geschwister','Enkel/in','Großmutter','Großvater','Schwiegersohn/-tochter','Sonstige angehörige Person'];
+  return vals.map(v=>`<option value="${esc(v)}" ${v===selected?'selected':''}>${esc(v)}</option>`).join('');
+}
 function applicationSupported(id){return !!APPLICATIONS[id]}
 function openApplication(id){
   if(!APPLICATIONS[id]){toast('Für diesen Punkt ist noch kein Antragsassistent hinterlegt');return}
@@ -304,7 +451,7 @@ function currentCase(){return state.cases[0]||null}
 function deceasedForCase(c=currentCase()){return c?state.persons.find(p=>p.id===c.personId)||null:null}
 function appStore(c,id){c.applications=c.applications||{};c.applications[id]=c.applications[id]||{};return c.applications[id]}
 function personAddress(p){const x=p?.profile||{};return [x.street,[x.zip,x.city].filter(Boolean).join(' '),x.country&&x.country!=='Deutschland'?x.country:''].filter(Boolean).join(', ')}
-function personSelectOptions(selected='',filterFn=null){return state.persons.filter(p=>!filterFn||filterFn(p)).map(p=>`<option value="${p.id}" ${p.id===selected?'selected':''}>${esc(personName(p))} – ${esc(relationLabel(p.relation))}</option>`).join('')}
+function personSelectOptions(selected='',filterFn=null,subject=null){return state.persons.filter(p=>!filterFn||filterFn(p)).map(p=>{const rel=subject?relationBetween(subject,p):relationLabel(p.relation);return `<option value="${p.id}" ${p.id===selected?'selected':''}>${esc(personName(p))} – ${esc(rel)}</option>`}).join('')}
 function defaultApplicant(c,id){
   const dead=deceasedForCase(c);
   if(!dead)return state.persons.find(p=>p.relation==='self'&&p.id!==c?.personId)?.id||'';
@@ -316,8 +463,8 @@ function defaultApplicant(c,id){
 function applicationApplicant(c,id,data){return state.persons.find(p=>p.id===(data?.applicantId||defaultApplicant(c,id)))||null}
 function applicantAutofillCard(p){
   if(!p)return `<div class="notice">Noch keine antragstellende Person gewählt.</div>`;
-  const x=p.profile||{};
-  return `<div class="autofill-card"><div><b>${esc(personName(p))}</b><div class="small muted">${esc(personAddress(p)||'Adresse noch nicht vollständig')} · ${esc(x.phone||'Telefon fehlt')}</div></div><span>✓ Stammdaten</span></div>`;
+  const x=p.profile||{},dead=deceasedForCase(),rel=relationBetween(dead,p);
+  return `<div class="autofill-card"><div><b>${esc(personName(p))}</b><div class="small muted">${esc(rel)} · ${esc(personAddress(p)||'Adresse noch nicht vollständig')} · ${esc(x.phone||'Telefon fehlt')}</div></div><span>✓ Stammdaten</span></div>`;
 }
 function sharedApplicantFields(p,data={}){
   const x=p?.profile||{},fin=p?.finance||{};
@@ -376,7 +523,7 @@ const DEATH_TASKS={
     where:'Renten Service der Deutschen Post, ggf. über das Bestattungsinstitut.',
     info:'Das ist nicht einfach die Rente des Verstorbenen. Es ist ein Vorschuss auf die Witwen-/Witwerrente. Wenn der verstorbene Ehe- oder Lebenspartner bereits eine gesetzliche Rente bezog, kann der hinterbliebene Ehe-/Lebenspartner innerhalb von 30 Tagen einen Vorschuss beantragen. Er entspricht grundsätzlich dem Dreifachen der für den Sterbemonat gezahlten Monatsrente. Zusätzlich muss anschließend der formelle Antrag auf Witwen-/Witwerrente bei der Deutschen Rentenversicherung gestellt werden.',
     docs:['Original der Sterbeurkunde mit Ehe-/Lebenspartnerangabe','Bankverbindung (IBAN)','Angaben zum verstorbenen Rentenbezieher','Tag der Eheschließung / Lebenspartnerschaft'],
-    links:[['Deutsche Post: Formular & Hinweise','https://www.deutschepost.de/de/r/rentenservice/downloadcenter.html'],['DRV: Erklärung Sterbevierteljahr','https://www.deutsche-rentenversicherung.de/SharedDocs/Glossareintraege/DE/S/sterbevierteljahr']]
+    links:[['ANTRAG: Vorschuss Sterbevierteljahr (PDF)','https://www.deutschepost.de/dam/jcr:ccb44b2b-ade2-4956-975a-6b6627f5e17f/dp-rs-aenderungsformular-rentenservice.pdf'],['Renten Service: Hinweise & Formulare','https://www.deutschepost.de/de/r/rentenservice/downloadcenter.html'],['Info: DRV zum Sterbevierteljahr','https://www.deutsche-rentenversicherung.de/SharedDocs/Glossareintraege/DE/S/sterbevierteljahr']]
   },
   widowPension:{
     phase:'benefits',title:'Witwen-/Witwerrente beantragen',kind:'Antrag',urgency:'zeitnah',
@@ -561,7 +708,7 @@ function applicationScreen(){
   if(!c||!def)return `<section class="screen">${appTop('Antrag vorbereiten')}<div class="content"><div class="notice">Bitte zuerst einen Sterbefall und einen unterstützten Antrag auswählen.</div></div></section>`;
   const dead=deceasedForCase(c),data=appStore(c,id),applicant=applicationApplicant(c,id,data);
   const selected=applicant?.id||'';
-  const options=personSelectOptions(selected,p=>p.id!==c.personId);
+  const options=personSelectOptions(selected,p=>p.id!==c.personId,dead);
   return `<section class="screen">${appTop(def.title,def.authority)}<div class="content">
     <div class="application-source"><div><b>${esc(def.officialForm)}</b><div class="small">${esc(def.sourceStand)}</div></div><span>offizielle Grundlage</span></div>
     ${applicationProgress(id,c,data,applicant)}
@@ -572,16 +719,18 @@ function applicationScreen(){
     </div>
     <div class="form-card"><h3>Wer stellt den Antrag?</h3>
       <div class="field"><label>Gespeicherte Person</label><select id="applicationApplicant" onchange="changeApplicationApplicant()"><option value="">Bitte auswählen</option>${options}</select></div>
-      <div class="small muted">Stammdaten werden aus der Vorsorge-Personenverwaltung übernommen und bleiben lokal auf dem Gerät.</div>
+      <div class="field"><label>Beziehung zur verstorbenen Person</label><select id="applicantRelation"><option value="">Bitte auswählen</option>${applicantRelationOptions(data.applicantRelation||relationBetween(dead,applicant))}</select></div>
+      <div class="small muted">Die Beziehung wird soweit möglich vorgeschlagen und kann geändert werden. In den Antragsunterlagen erscheint z. B. Partner/in, Vater, Mutter, Sohn oder Tochter – nicht „Ich“.</div>
     </div>
     ${sharedApplicantFields(applicant,data)}
     ${applicationSpecificForm(id,c,data,applicant)}
     <div class="notice"><b>Hinweis:</b> ${esc(def.note)}</div>
     <button class="cta teal full mt16" onclick="saveApplication()">Antragsdaten speichern</button>
     <button class="cta ghost full mt10" onclick="saveApplication(true)">Vorschau / Antragsmappe</button>
-    <div class="row mt10">
-      <button class="cta ghost full" onclick="window.open('${def.online}','_blank','noopener')">Offizielle Antragseite ↗</button>
-      ${def.pdf?`<button class="cta ghost full" onclick="window.open('${def.pdf}','_blank','noopener')">Original-PDF ↗</button>`:''}
+    <div class="application-link-grid mt10">
+      ${def.applyUrl?`<button class="cta teal full" onclick="window.open('${def.applyUrl}','_blank','noopener')">${esc(def.applyLabel||'Antrag öffnen')} ↗</button>`:''}
+      ${def.pdf && def.pdf!==def.applyUrl?`<button class="cta ghost full" onclick="window.open('${def.pdf}','_blank','noopener')">Original-PDF ↗</button>`:''}
+      ${def.infoUrl?`<button class="cta ghost full" onclick="window.open('${def.infoUrl}','_blank','noopener')">${esc(def.infoLabel||'Informationen')} ↗</button>`:''}
     </div>
   </div></section>`;
 }
@@ -656,7 +805,7 @@ function collectApplicationData(id){
     applicantId:val('applicationApplicant'),
     phone:val('appPhone'),email:val('appEmail'),pensionNo:val('appPensionNo'),taxId:val('appTaxId'),
     healthInsurance:val('appHealthInsurance'),iban:val('appIban'),bankName:val('appBankName'),accountHolder:val('appAccountHolder'),
-    deceasedPensionNo:val('appDeceasedPensionNo'),deathDate:val('appDeathDate')
+    deceasedPensionNo:val('appDeceasedPensionNo'),deathDate:val('appDeathDate'),applicantRelation:val('applicantRelation')
   };
   if(id==='sterbevierteljahr')return {...base,postPensionNo:val('appPostPensionNo'),marriageDate:val('appMarriageDate'),partnership:val('appPartnership'),residenceGermany:checked('appResidenceGermany'),deathCertificateOriginal:checked('appDeathCertificateOriginal'),marriageOneYear:checked('appMarriageOneYear'),attachments:readAttachments(['deathCertificate','id','pensionDocument'])};
   if(id==='widowPension')return {...base,pensionType:val('appPensionType'),partnership:val('appPartnership'),marriageDate:val('appMarriageDate'),marriageUntilDeath:val('appMarriageUntilDeath'),remarried:val('appRemarried'),ownPensionInsured:val('appOwnPensionInsured'),income:val('appIncome'),socialBenefit:val('appSocialBenefit'),missingPeriods:val('appMissingPeriods'),foreignPeriods:val('appForeignPeriods'),attachments:readAttachments(['deathCertificate','marriageCertificate','id','pensionHistory','incomeProof','healthInsurance'])};
@@ -699,7 +848,8 @@ function applicationPreview(){
       <div class="no-print application-preview-actions">
         <button class="cta teal full" onclick="window.print()">Drucken / als PDF speichern</button>
         <button class="cta ghost full mt10" onclick="shareApplicationSummary()">Teilen / versenden</button>
-        <button class="cta ghost full mt10" onclick="window.open('${def.online}','_blank','noopener')">Offiziellen Antrag öffnen ↗</button>
+        ${def.applyUrl?`<button class="cta ghost full mt10" onclick="window.open('${def.applyUrl}','_blank','noopener')">${esc(def.applyLabel||'Offiziellen Antrag öffnen')} ↗</button>`:''}
+        ${def.infoUrl?`<button class="cta ghost full mt10" onclick="window.open('${def.infoUrl}','_blank','noopener')">${esc(def.infoLabel||'Informationen')} ↗</button>`:''}
       </div>
     </div>
   </section>`;
@@ -710,7 +860,7 @@ function renderApplicationPreview(id,c,d,dead,applicant){
   const def=APPLICATIONS[id],dx=dead?.profile||{},ax=applicant?.profile||{};
   const header=`<article class="application-sheet"><header><div class="form-brand">Sterbefall Assistent Deutschland</div><h1>${esc(def.title)}</h1><p>Vorbereitete Antragsdaten · ${esc(def.authority)}</p></header>
   <h2>Verstorbene Person</h2>${previewTable([['Name',personName(dead)],['Geburtsdatum',fmtDate(dx.birthDate)],['Adresse',personAddress(dead)],['Sterbedatum',fmtDate(d.deathDate||c.deathDate)],['Rentenversicherungsnummer',d.deceasedPensionNo||dx.pensionNo||'']])}
-  <h2>Antragstellende Person</h2>${previewTable([['Name',personName(applicant)],['Geburtsdatum',fmtDate(ax.birthDate)],['Adresse',personAddress(applicant)],['Telefon',d.phone||ax.phone||''],['E-Mail',d.email||ax.email||''],['Rentenversicherungsnummer',d.pensionNo||ax.pensionNo||''],['Steuer-ID',d.taxId||ax.taxId||''],['Krankenkasse',d.healthInsurance||ax.healthInsurance||''],['IBAN',d.iban||''],['Geldinstitut',d.bankName||''],['Kontoinhaber/in',d.accountHolder||'']])}`;
+  <h2>Antragstellende Person</h2>${previewTable([['Name',personName(applicant)],['Beziehung zur verstorbenen Person',d.applicantRelation||relationBetween(dead,applicant)],['Geburtsdatum',fmtDate(ax.birthDate)],['Adresse',personAddress(applicant)],['Telefon',d.phone||ax.phone||''],['E-Mail',d.email||ax.email||''],['Rentenversicherungsnummer',d.pensionNo||ax.pensionNo||''],['Steuer-ID',d.taxId||ax.taxId||''],['Krankenkasse',d.healthInsurance||ax.healthInsurance||''],['IBAN',d.iban||''],['Geldinstitut',d.bankName||''],['Kontoinhaber/in',d.accountHolder||'']])}`;
   let body='';
   if(id==='sterbevierteljahr')body=`<h2>Vorschussangaben</h2>${previewTable([['Postrentennummer',d.postPensionNo],['Tag der Eheschließung / Lebenspartnerschaft',fmtDate(d.marriageDate)],['Partnerschaft',d.partnership==='civil'?'Eingetragene Lebenspartnerschaft':'Ehe'],['Wohnsitz im Inland',boolText(d.residenceGermany)],['Sterbeurkunde Original liegt bereit',boolText(d.deathCertificateOriginal)],['Mindestens 1 Jahr bestanden',boolText(d.marriageOneYear)]])}<h2>Unterlagen</h2>${checkedAttachments(d,[['deathCertificate','Sterbeurkunde im Original'],['id','Personalausweis/Reisepass'],['pensionDocument','Rentenunterlagen / Postrentennummer']])}`;
   if(id==='widowPension')body=`<h2>R0500 – Kernangaben</h2>${previewTable([['Beantragte Rentenart',d.pensionType],['Partnerschaft',d.partnership==='civil'?'Eingetragene Lebenspartnerschaft':'Ehe'],['Tag der Eheschließung',fmtDate(d.marriageDate)],['Bestand bis zum Tod',boolText(d.marriageUntilDeath)],['Erneut geheiratet',boolText(d.remarried)],['Eigene gesetzliche Rentenversicherung',boolText(d.ownPensionInsured)],['Sozialleistungen',boolText(d.socialBenefit)],['Fehlende Versicherungszeiten möglich',boolText(d.missingPeriods)],['Auslandszeiten möglich',boolText(d.foreignPeriods)]])}<p><b>Eigene Einkünfte:</b><br>${esc(d.income||'—')}</p><h2>Unterlagen</h2>${checkedAttachments(d,[['deathCertificate','Sterbeurkunde'],['marriageCertificate','Heirats-/Lebenspartnerschaftsurkunde'],['id','Personaldokument'],['pensionHistory','Versicherungsverlauf/Rentenunterlagen'],['incomeProof','Einkommensnachweise'],['healthInsurance','Kranken-/Pflegeversicherung']])}`;
@@ -930,5 +1080,6 @@ async function saveMeta(){await idbSet('meta','main',{activePersonId:state.activ
 async function migrateLegacy(){let existing=await idbGet('persons','main');if(existing?.length){state.persons=existing.map(normalizePerson);return}const oldProfile=await idbGet('profile','main')||{},oldDocs=await idbGet('docs','main')||{};if(Object.keys(oldProfile).length||Object.keys(oldDocs).length){const p=normalizePerson({id:uid('person'),relation:'self',profile:{...oldProfile},documents:{...oldDocs},contacts:[]});if(oldProfile.emergencyName||oldProfile.emergencyPhone)p.contacts=[{id:uid('contact'),name:oldProfile.emergencyName||'',role:oldProfile.emergencyRelation||'',phone:oldProfile.emergencyPhone||'',isEmergency:true,isAgent:false}];delete p.profile.emergencyName;delete p.profile.emergencyRelation;delete p.profile.emergencyPhone;state.persons=[p];state.activePersonId=p.id;await persistPersons()}}
 async function init(){db=await openDB();await migrateLegacy();if(!state.persons.length)state.persons=(await idbGet('persons','main')||[]).map(normalizePerson);const meta=await idbGet('meta','main')||{};state.activePersonId=meta.activePersonId||state.activePersonId||state.persons[0]?.id||null;state.cases=await idbGet('cases','main')||[];state.settings=await idbGet('settings','main')||state.settings;render();if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{})}
 
+window.toggleFormHelp=toggleFormHelp;
 Object.assign(window,{go,back,newPerson,editPerson,selectPerson,deletePerson,savePersonBasic,saveProfile,addContact,removeContact,applyTrustedPerson,openDoc,saveDocumentDetail,addDocumentAttachments,viewDocumentAttachment,shareDocumentAttachment,removeDocumentAttachment,openOfficial,openOfficialPdf,openBundledBlank,fillOfficialPdfBundled,installTemplateFromFile,fillOfficialPdfFromWeb,fillOfficialPdfFromFile,applyFormContact,saveFilledForm,refreshFormPreview,printFilledForm,shareCurrentDocumentInfo,downloadLastPdf,shareLastPdf,saveMedical,saveZvr,saveBestattung,saveDigital,saveCase,toggleCaseTask,updatePreview,exportData,importData});
 window.addEventListener('DOMContentLoaded',init);

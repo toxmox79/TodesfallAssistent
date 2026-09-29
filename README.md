@@ -1,3 +1,22 @@
+# Sterbefall Assistent Deutschland v0.8.3
+
+Neu: Verständnishilfe direkt in den Dokumentformularen.
+
+Bei erklärungsbedürftigen medizinischen und rechtlichen Angaben erscheint ein kleines `?`.
+Beim Antippen öffnet sich direkt unter dem Feld eine kurze Erklärung in einfacher Sprache.
+Enthalten sind Hilfen insbesondere für Patientenverfügung, Vorsorgevollmacht, Betreuungsverfügung,
+Schweigepflichtentbindung, Organspende und Testament-Vorbereitung.
+
+Die Hilfetexte erscheinen nur in der App und werden nicht in das ausgedruckte Dokument übernommen.
+
+# Sterbefall Assistent Deutschland v0.8.2
+
+Hotfix Links: Beim Sterbevierteljahr führt der primäre Button jetzt direkt zum offiziellen PDF-Antrag des Renten Service der Deutschen Post (Teil 7 – Vorschusszahlung). Informationsseiten und Antragsseiten sind in der Oberfläche getrennt und eindeutig beschriftet.
+
+# Sterbefall Assistent Deutschland v0.8.1
+
+Beziehungsangaben wurden korrigiert: In Formularen und Antragsunterlagen wird eine gespeicherte Person nicht mehr als „Ich“ bezeichnet. Die Beziehung wird relativ zur Person berechnet, für die das Formular erstellt wird. Beispiel: Wird die Vorsorge der Mutter bearbeitet, erscheint die eigene Person – abhängig von der Anrede – als Sohn oder Tochter. Im Sterbefall kann die Beziehung zum Verstorbenen zusätzlich ausdrücklich gewählt und korrigiert werden.
+
 # Sterbefall Assistent Deutschland v0.8
 
 Neu in v0.8: **Anträge vorbereiten**

@@ -99,3 +99,24 @@
   .application-sheet{border:0;border-radius:0;padding:0;max-width:none}
   .application-sheet footer{position:static;margin-top:24px;font-size:9px;color:#555}
 }
+
+.application-link-grid{display:grid;gap:8px}
+@media(min-width:700px){.application-link-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* v0.8.3 – verständliche Formularhilfen */
+.field-label-row,.section-help-title,.checkline-row{display:flex;align-items:flex-start;gap:8px}
+.field-label-row label,.section-help-title h3,.checkline-row .checkline{flex:1}
+.section-help-title h3{margin-top:0}
+.help-btn{width:24px;height:24px;min-width:24px;border:0;border-radius:50%;background:#e8f7f4;color:var(--teal-dark);font-weight:900;font-size:14px;line-height:24px;padding:0;cursor:pointer;display:inline-grid;place-items:center;box-shadow:inset 0 0 0 1px #bfe6df}
+.help-btn:hover,.help-btn[aria-expanded="true"]{background:var(--teal);color:#fff;box-shadow:none}
+.help-btn.static{cursor:default;flex:0 0 24px}
+.field-help{margin:6px 0 9px;padding:10px 12px;border-radius:12px;background:#f2faf8;border-left:4px solid var(--teal);font-size:13px;line-height:1.48;color:#31433f}
+.field-help[hidden]{display:none!important}
+.help-intro{display:flex;align-items:flex-start;gap:10px;margin:0 0 14px;padding:10px 12px;background:#fff8d7;border:1px solid #f1df87;border-radius:14px;font-size:13px;line-height:1.45}
+.checkline-help-wrap{margin:7px 0}
+.checkline-row{align-items:center}
+.checkline-row .checkline{margin:0}
+@media(max-width:430px){
+  .help-btn{width:26px;height:26px;min-width:26px}
+  .field-help{font-size:12.5px}
+}
