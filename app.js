@@ -1,6 +1,6 @@
 const DB_NAME='sterbefall_assistent_db', DB_VERSION=6;
 let db;
-const state={route:'welcome',persons:[],activePersonId:null,cases:[],settings:{simpleMode:true},editPersonId:null,docKey:null,officialPdfKey:null,lastPdf:null,applicationTaskId:null};
+const state={route:'welcome',persons:[],activePersonId:null,cases:[],settings:{simpleMode:true},editPersonId:null,docKey:null,officialPdfKey:null,lastPdf:null,applicationTaskId:null,shareScope:'person',shareLink:'',sharePin:'',pendingShare:null,pendingShareToken:null};
 
 const OFFICIAL={
   vorsorge:'https://www.bmj.de/SharedDocs/Downloads/DE/Formular/Vorsorgevollmacht.html',
@@ -62,8 +62,8 @@ function completion(p=activePerson()){
 function appTop(title,sub=''){return `<div class="topbar"><button class="cta ghost back-btn" onclick="back()">‹</button><div class="grow"><h1>${esc(title)}</h1>${sub?`<div class="sub">${esc(sub)}</div>`:''}</div></div>`}
 const nav=()=>`<nav class="bottom-nav no-print"><button class="nav-btn ${state.route==='home'?'active':''}" onclick="go('home')"><span class="ni">⌂</span>Start</button><button class="nav-btn ${['documents','document-detail'].includes(state.route)?'active':''}" onclick="go('documents')"><span class="ni">▤</span>Dokumente</button><button class="nav-btn ${state.route==='case'?'active':''}" onclick="go('case')"><span class="ni">◷</span>Sterbefall</button><button class="nav-btn ${['profile','backup'].includes(state.route)?'active':''}" onclick="go('profile')"><span class="ni">●</span>Profil</button></nav>`;
 function go(r){state.route=r;render();window.scrollTo(0,0)}
-function back(){const map={'person-edit':'vorsorge','vorsorge-person':'vorsorge','profile':'vorsorge-person','trusted':'vorsorge-person','documents':'vorsorge-person','document-detail':'documents','form-fill':'document-detail','official-pdf':state.officialPdfKey==='zvrP'?'zvr':'document-detail','medical':'vorsorge-person','zvr':'vorsorge-person','bestattung':'vorsorge-person','digital':'vorsorge-person','serious':'home','case':'home','application':'case','application-preview':'application','generator':'case','backup':'profile'};go(map[state.route]||'home')}
-function render(){const a=document.getElementById('app');let html='';const r=state.route;if(r==='welcome')html=welcome();else if(r==='home')html=home()+nav();else if(r==='vorsorge')html=vorsorgePeople()+nav();else if(r==='vorsorge-person')html=vorsorgePerson()+nav();else if(r==='person-edit')html=personEdit()+nav();else if(r==='profile')html=profile()+nav();else if(r==='trusted')html=trusted()+nav();else if(r==='documents')html=documents()+nav();else if(r==='document-detail')html=documentDetail()+nav();else if(r==='form-fill')html=formFill()+nav();else if(r==='official-pdf')html=officialPdfScreen()+nav();else if(r==='medical')html=medical()+nav();else if(r==='zvr')html=zvr()+nav();else if(r==='bestattung')html=bestattung()+nav();else if(r==='digital')html=digital()+nav();else if(r==='emergency')html=emergency();else if(r==='serious')html=serious()+nav();else if(r==='case')html=caseScreen()+nav();else if(r==='application')html=applicationScreen()+nav();else if(r==='application-preview')html=applicationPreview()+nav();else if(r==='generator')html=generator()+nav();else if(r==='backup')html=backup()+nav();a.innerHTML=html;}
+function back(){const map={'person-edit':'vorsorge','vorsorge-person':'vorsorge','profile':'vorsorge-person','trusted':'vorsorge-person','documents':'vorsorge-person','document-detail':'documents','form-fill':'document-detail','official-pdf':state.officialPdfKey==='zvrP'?'zvr':'document-detail','medical':'vorsorge-person','zvr':'vorsorge-person','bestattung':'vorsorge-person','digital':'vorsorge-person','serious':'home','case':'home','application':'case','application-preview':'application','generator':'case','backup':'profile','share':'vorsorge-person','share-import':'home'};go(map[state.route]||'home')}
+function render(){const a=document.getElementById('app');let html='';const r=state.route;if(r==='welcome')html=welcome();else if(r==='home')html=home()+nav();else if(r==='vorsorge')html=vorsorgePeople()+nav();else if(r==='vorsorge-person')html=vorsorgePerson()+nav();else if(r==='person-edit')html=personEdit()+nav();else if(r==='profile')html=profile()+nav();else if(r==='trusted')html=trusted()+nav();else if(r==='documents')html=documents()+nav();else if(r==='document-detail')html=documentDetail()+nav();else if(r==='form-fill')html=formFill()+nav();else if(r==='official-pdf')html=officialPdfScreen()+nav();else if(r==='medical')html=medical()+nav();else if(r==='zvr')html=zvr()+nav();else if(r==='bestattung')html=bestattung()+nav();else if(r==='digital')html=digital()+nav();else if(r==='emergency')html=emergency();else if(r==='serious')html=serious()+nav();else if(r==='case')html=caseScreen()+nav();else if(r==='application')html=applicationScreen()+nav();else if(r==='application-preview')html=applicationPreview()+nav();else if(r==='generator')html=generator()+nav();else if(r==='backup')html=backup()+nav();else if(r==='share')html=shareScreen()+nav();else if(r==='share-import')html=shareImportScreen();a.innerHTML=html;}
 function noPerson(title){return `<section class="screen">${appTop(title)}<div class="content"><div class="empty-card"><div class="empty-icon">👥</div><h3>Noch keine Person ausgewählt</h3><p>Lege in der Vorsorge zuerst eine Person an.</p><button class="cta teal full" onclick="go('vorsorge')">Zur Vorsorge</button></div></div></section>`}
 function personSwitch(p){return `<button class="person-switch" onclick="go('vorsorge')"><span>${relationEmoji(p.relation)} ${esc(personName(p))}</span><small>${esc(relationLabel(p.relation))} · Person wechseln</small></button>`}
 
@@ -185,7 +185,7 @@ function personEdit(){const p=state.editPersonId?state.persons.find(x=>x.id===st
 async function savePersonBasic(){const relation=document.getElementById('personRelation').value,firstName=document.getElementById('personFirst').value.trim(),lastName=document.getElementById('personLast').value.trim(),birthDate=document.getElementById('personBirth').value;if(!firstName||!lastName){toast('Vor- und Nachname bitte ausfüllen');return}if(state.editPersonId){const p=state.persons.find(x=>x.id===state.editPersonId);p.relation=relation;p.profile={...(p.profile||{}),firstName,lastName,birthDate};normalizePerson(p)}else{const p=normalizePerson({id:uid('person'),relation,profile:{firstName,lastName,birthDate}});state.persons.push(p);state.activePersonId=p.id}await persistPersons();state.editPersonId=null;toast('Person gespeichert');go('vorsorge')}
 
 function moduleCard(icon,title,desc,meta,route,done=false){return `<button class="module-card ${done?'complete':''}" onclick="go('${route}')"><div class="module-icon">${icon}</div><div class="grow"><b>${esc(title)}</b><p>${esc(desc)}</p>${meta?`<small>${esc(meta)}</small>`:''}</div><div class="chev">›</div></button>`}
-function vorsorgePerson(){const p=activePerson();if(!p)return noPerson('Vorsorge');const pct=completion(p);normalizePerson(p);const x=p.profile;const docsDone=Object.keys(DOCS).filter(k=>isDocDone(p,k)).length;return `<section class="screen">${appTop('Vorsorge',`Für ${personName(p)}`)}<div class="content">${personSwitch(p)}<div class="progress-card"><div class="progress-ring" style="--p:${pct}"><div style="text-align:center"><b>${pct}%</b><br><span>vorbereitet</span></div></div><p class="muted center">Die wichtigsten Angaben werden nur einmal erfasst und in den Bereichen wiederverwendet.</p></div><div class="section-title"><h2>Vorsorge-Bereiche</h2></div><div class="module-list">${moduleCard('👤','Stammdaten','Adresse, Versicherung und wichtige Kennnummern',x.street?'Stammdaten teilweise erfasst':'Noch ergänzen','profile',!!x.street)}${moduleCard('👥','Vertrauenspersonen','Bevollmächtigte und Notfallkontakte',(p.contacts||[]).length?`${p.contacts.length} Kontakt(e)`:'Noch keine Kontakte','trusted',(p.contacts||[]).length>0)}${moduleCard('📄','Dokumente & Vollmachten','Vorsorgevollmacht, Patientenverfügung, Bankvollmacht …',`${docsDone} von ${Object.keys(DOCS).length} dokumentiert`,'documents',docsDone>=5)}${moduleCard('🩺','Medizin & Krankenhaus','Hausarzt, wichtige Hinweise, Organspende und Auffindbarkeit',p.medical?.doctorName?'Hausarzt hinterlegt':'Noch ergänzen','medical',!!p.medical?.doctorName)}${moduleCard('🏛️','Zentrales Vorsorgeregister','Registrierung und Aufbewahrungsort dokumentieren',p.zvr?.registered?'Als registriert markiert':'Noch nicht registriert','zvr',!!p.zvr?.registered)}${moduleCard('🕯️','Bestattungswünsche','Wünsche festhalten, damit Angehörige nicht raten müssen',p.bestattung?.type||p.bestattung?.notes?'Wünsche vorhanden':'Noch offen','bestattung',!!(p.bestattung?.type||p.bestattung?.notes))}${moduleCard('🔑','Digitaler Nachlass','Konten, Geräte und Zugangshinweise – ohne Passwörter im Klartext',p.digital?.contactName?'Vertrauensperson hinterlegt':'Noch offen','digital',!!p.digital?.contactName)}</div><div class="notice" style="margin-top:16px"><b>Hinweis:</b> Die App ersetzt keine medizinische oder rechtliche Beratung. Bei rechtlich relevanten Dokumenten verlinkt sie bevorzugt auf offizielle Formulare und Informationen.</div></div></section>`}
+function vorsorgePerson(){const p=activePerson();if(!p)return noPerson('Vorsorge');const pct=completion(p);normalizePerson(p);const x=p.profile;const docsDone=Object.keys(DOCS).filter(k=>isDocDone(p,k)).length;return `<section class="screen">${appTop('Vorsorge',`Für ${personName(p)}`)}<div class="content">${personSwitch(p)}<div class="progress-card"><div class="progress-ring" style="--p:${pct}"><div style="text-align:center"><b>${pct}%</b><br><span>vorbereitet</span></div></div><p class="muted center">Die wichtigsten Angaben werden nur einmal erfasst und in den Bereichen wiederverwendet.</p></div><div class="section-title"><h2>Vorsorge-Bereiche</h2></div><div class="module-list">${moduleCard('👤','Stammdaten','Adresse, Versicherung und wichtige Kennnummern',x.street?'Stammdaten teilweise erfasst':'Noch ergänzen','profile',!!x.street)}${moduleCard('👥','Vertrauenspersonen','Bevollmächtigte und Notfallkontakte',(p.contacts||[]).length?`${p.contacts.length} Kontakt(e)`:'Noch keine Kontakte','trusted',(p.contacts||[]).length>0)}${moduleCard('📄','Dokumente & Vollmachten','Vorsorgevollmacht, Patientenverfügung, Bankvollmacht …',`${docsDone} von ${Object.keys(DOCS).length} dokumentiert`,'documents',docsDone>=5)}${moduleCard('🩺','Medizin & Krankenhaus','Hausarzt, wichtige Hinweise, Organspende und Auffindbarkeit',p.medical?.doctorName?'Hausarzt hinterlegt':'Noch ergänzen','medical',!!p.medical?.doctorName)}${moduleCard('🏛️','Zentrales Vorsorgeregister','Registrierung und Aufbewahrungsort dokumentieren',p.zvr?.registered?'Als registriert markiert':'Noch nicht registriert','zvr',!!p.zvr?.registered)}${moduleCard('🕯️','Bestattungswünsche','Wünsche festhalten, damit Angehörige nicht raten müssen',p.bestattung?.type||p.bestattung?.notes?'Wünsche vorhanden':'Noch offen','bestattung',!!(p.bestattung?.type||p.bestattung?.notes))}${moduleCard('🔑','Digitaler Nachlass','Konten, Geräte und Zugangshinweise – ohne Passwörter im Klartext',p.digital?.contactName?'Vertrauensperson hinterlegt':'Noch offen','digital',!!p.digital?.contactName)}</div><button class="cta ghost full mt16" onclick="openShare('person')">↗ Daten an Angehörige weitergeben</button><div class="notice" style="margin-top:16px"><b>Hinweis:</b> Die App ersetzt keine medizinische oder rechtliche Beratung. Bei rechtlich relevanten Dokumenten verlinkt sie bevorzugt auf offizielle Formulare und Informationen.</div></div></section>`}
 
 function profile(){const p=activePerson();if(!p)return noPerson('Stammdaten');const x=p.profile||{};return `<section class="screen">${appTop('Stammdaten',`Für ${personName(p)}`)}<div class="content">${personSwitch(p)}<div class="form-card"><h3>Persönliche Daten</h3><div class="two">${selectField('Anrede','salutation',x.salutation||'',['|Bitte auswählen','Frau','Herr','keine'])}${field('Titel','title',x.title)}</div><div class="two">${field('Vorname','firstName',x.firstName)}${field('Nachname','lastName',x.lastName)}</div><div class="two">${field('Geburtsname','birthName',x.birthName)}${field('Geburtsort','birthPlace',x.birthPlace)}</div><div class="two">${field('Geburtsdatum','birthDate',x.birthDate,'date')}${selectField('Familienstand','maritalStatus',x.maritalStatus||'',['|Bitte auswählen','ledig','verheiratet','geschieden','verwitwet','Lebenspartnerschaft'])}</div></div><div class="form-card"><h3>Kontakt & Adresse</h3>${field('Straße / Hausnummer','street',x.street)}${field('Adresszusatz','addressAddition',x.addressAddition)}<div class="two">${field('PLZ','zip',x.zip)}${field('Ort','city',x.city)}</div><div class="two">${field('Land','country',x.country||'Deutschland')}${field('Telefon','phone',x.phone,'tel')}</div>${field('E-Mail','email',x.email,'email')}</div><div class="form-card"><h3>Versicherung & Identifikation</h3>${field('Krankenkasse','healthInsurance',x.healthInsurance)}${field('Versichertennummer','healthInsuranceNo',x.healthInsuranceNo)}${field('Rentenversicherungsnummer','pensionNo',x.pensionNo)}${field('Steuer-ID','taxId',x.taxId,'text','Optional – nur speichern, wenn gewünscht.')}</div><button class="cta teal full" onclick="saveProfile()">Speichern</button><button class="cta ghost full mt10" onclick="go('backup')">Datensicherung & Export</button></div></section>`}
 async function saveProfile(){const p=activePerson();if(!p)return;['salutation','title','firstName','lastName','birthName','birthPlace','birthDate','maritalStatus','street','addressAddition','zip','city','country','phone','email','healthInsurance','healthInsuranceNo','pensionNo','taxId'].forEach(k=>p.profile[k]=document.getElementById(k)?.value?.trim()||'');await persistPersons();toast('Stammdaten lokal gespeichert');render()}
@@ -216,7 +216,7 @@ function contactOptions(p,selected=''){const cs=p.contacts||[];const people=sele
 function resolveSelectedContact(owner,selection){if(!selection)return null;if(selection.startsWith('person:')){const id=selection.slice(7),q=state.persons.find(x=>x.id===id);if(!q)return null;const x=q.profile||{};return {source:'person',id:q.id,name:personName(q),role:relationLabel(q.relation),phone:x.phone||'',email:x.email||'',address:personAddress(q)}}if(selection.startsWith('contact:')){const id=selection.slice(8),c=(owner?.contacts||[]).find(x=>x.id===id);return c?{...c,source:'contact'}:null}const c=(owner?.contacts||[]).find(x=>x.id===selection);if(c)return {...c,source:'contact'};const q=state.persons.find(x=>x.id===selection&&x.id!==owner?.id);if(q){const x=q.profile||{};return {source:'person',id:q.id,name:personName(q),role:relationLabel(q.relation),phone:x.phone||'',email:x.email||'',address:personAddress(q)}}return null}
 function commonIdentityFields(p){const x=p.profile||{};return `<div class="form-card"><h3>Person</h3><div class="autofill-badge">✓ aus Stammdaten übernommen</div><div class="two">${field('Vorname','ffFirst',x.firstName)}${field('Nachname','ffLast',x.lastName)}</div><div class="two">${field('Geburtsdatum','ffBirth',x.birthDate,'date')}${field('Geburtsort','ffBirthPlace',x.birthPlace)}</div>${field('Straße / Hausnummer','ffStreet',x.street)}<div class="two">${field('PLZ','ffZip',x.zip)}${field('Ort','ffCity',x.city)}</div><div class="two">${field('Telefon','ffPhone',x.phone,'tel')}${field('E-Mail','ffEmail',x.email,'email')}</div></div>`}
 function agentFields(p,fd={}){return `<div class="form-card"><h3>Vertrauensperson / Bevollmächtigte Person</h3><div class="field"><label>Aus gespeicherten Personen oder Kontakten übernehmen</label><select id="ffContact" onchange="applyFormContact()">${contactOptions(p,fd.contactId||'')}</select></div><div class="two">${field('Name, Vorname','ffAgentName',fd.agentName||'')}${field('Beziehung / Rolle','ffAgentRole',fd.agentRole||'')}</div><div class="two">${field('Geburtsdatum','ffAgentBirth',fd.agentBirth||'','date')}${field('Geburtsort','ffAgentBirthPlace',fd.agentBirthPlace||'')}</div>${field('Anschrift','ffAgentAddress',fd.agentAddress||'')}<div class="two">${field('Telefon','ffAgentPhone',fd.agentPhone||'','tel')}${field('E-Mail','ffAgentEmail',fd.agentEmail||'','email')}</div></div>`}
-function formFill(){const p=activePerson();if(!p)return noPerson('Formular');const k=state.docKey||'vorsorge',d=DOCS[k],obj=normalizePerson(p).documents[k]||{},fd=obj.formData||{};let body='';if(k==='vorsorge')body=formVorsorge(p,fd);else if(k==='patienten')body=formPatienten(p,fd);else if(k==='betreuung')body=formBetreuung(p,fd);else if(k==='bank')body=formBank(p,fd);else if(k==='schweigepflicht')body=formSchweigepflicht(p,fd);else if(k==='bestattung')body=formBestattung(p,fd);else if(k==='organe')body=formOrgane(p,fd);else if(k==='testament')body=formTestament(p,fd);return `<section class="screen form-fill-page">${appTop(d.title,`Direkt ausfüllen für ${personName(p)}`)}<div class="content"><div class="notice"><b>Automatisch vorausgefüllt:</b> Stammdaten werden übernommen. Änderungen hier gelten zunächst nur für dieses Formular und überschreiben die Stammdaten nicht.</div><div class="help-intro no-print"><span class="help-btn static">?</span><span>Bei schwierigen Begriffen auf das Fragezeichen tippen – du erhältst eine kurze Erklärung in einfacher Sprache.</span></div>${body}<div class="row mt16 no-print"><button class="cta teal full" onclick="saveFilledForm()">Speichern</button><button class="cta ghost full" onclick="refreshFormPreview()">Vorschau</button></div><div class="row mt10 no-print"><button class="cta full" onclick="printFilledForm()">🖨 Drucken / PDF</button><button class="cta ghost full" onclick="shareCurrentDocumentInfo()">↗ Versenden</button></div><div id="formPreview" class="print-document">${renderFilledDocument(k,p,fd)}</div></div></section>`}
+function formFill(){const p=activePerson();if(!p)return noPerson('Formular');const k=state.docKey||'vorsorge',d=DOCS[k],obj=normalizePerson(p).documents[k]||{},fd=obj.formData||{};let body='';if(k==='vorsorge')body=formVorsorge(p,fd);else if(k==='patienten')body=formPatienten(p,fd);else if(k==='betreuung')body=formBetreuung(p,fd);else if(k==='bank')body=formBank(p,fd);else if(k==='schweigepflicht')body=formSchweigepflicht(p,fd);else if(k==='bestattung')body=formBestattung(p,fd);else if(k==='organe')body=formOrgane(p,fd);else if(k==='testament')body=formTestament(p,fd);return `<section class="screen form-fill-page">${appTop(d.title,`Direkt ausfüllen für ${personName(p)}`)}<div class="content"><div class="notice"><b>Automatisch vorausgefüllt:</b> Stammdaten werden übernommen. Änderungen hier gelten zunächst nur für dieses Formular und überschreiben die Stammdaten nicht.</div><div class="help-intro no-print"><span class="help-btn static">?</span><span>Bei schwierigen Begriffen auf das Fragezeichen tippen – du erhältst eine kurze Erklärung in einfacher Sprache.</span></div>${body}<div class="row mt16 no-print"><button class="cta teal full" onclick="saveFilledForm()">Speichern</button><button class="cta ghost full" onclick="refreshFormPreview()">Vorschau</button></div><div class="row mt10 no-print"><button class="cta full" onclick="printFilledForm()">🖨 Drucken / PDF</button><button class="cta ghost full" onclick="openShare('document')">↗ Daten-Link teilen</button></div><div id="formPreview" class="print-document">${renderFilledDocument(k,p,fd)}</div></div></section>`}
 
 function ynField(label,id,val=''){return selectField(label,id,val||'',['|Bitte auswählen','yes|Ja','no|Nein'])}
 function formVorsorge(p,fd){return `${commonIdentityFields(p)}${agentFields(p,fd)}
@@ -1068,7 +1068,269 @@ async function fillOfficialPdfFromFile(){const f=document.getElementById('offici
 function downloadLastPdf(){if(!state.lastPdf){toast('Bitte zuerst eine PDF erzeugen');return}const u=URL.createObjectURL(state.lastPdf.blob),a=document.createElement('a');a.href=u;a.download=state.lastPdf.filename;a.click();setTimeout(()=>URL.revokeObjectURL(u),4000)}
 async function shareLastPdf(){if(!state.lastPdf){toast('Bitte zuerst eine PDF erzeugen');return}const file=new File([state.lastPdf.blob],state.lastPdf.filename,{type:'application/pdf'});if(navigator.share&&navigator.canShare?.({files:[file]})){try{await navigator.share({files:[file],title:state.lastPdf.filename,text:'Dokument aus Sterbefall Assistent Deutschland'});return}catch(e){if(e?.name==='AbortError')return}}downloadLastPdf();toast('Direktes Teilen nicht unterstützt – PDF wurde heruntergeladen')}
 
-function backup(){return `<section class="screen">${appTop('Datensicherung','Local-first bleibt nur sicher, wenn es ein Backup gibt')}<div class="content"><div class="info-card"><div class="big-icon">💾</div><h2>Lokales Backup</h2><p>Exportiere regelmäßig eine Sicherungsdatei. Sie enthält persönliche und möglicherweise sensible Daten.</p></div><button class="cta teal full" onclick="exportData()">Backup exportieren</button><div class="form-card mt16"><h3>Backup wiederherstellen</h3><div class="field"><label>JSON-Sicherungsdatei</label><input type="file" id="importFile" accept="application/json,.json"></div><button class="cta ghost full" onclick="importData()">Backup importieren</button></div><div class="notice"><b>Sicherheit:</b> Die exportierte Datei ist in dieser Version noch nicht verschlüsselt. Bewahre sie geschützt auf. Eine passwortgeschützte verschlüsselte Sicherung ist für die nächste Ausbaustufe vorgesehen.</div></div></section>`}
+
+function openShare(scope='person'){
+  const p=activePerson();if(!p){toast('Bitte zuerst eine Person auswählen');return}
+  state.shareScope=scope;
+  state.shareLink='';state.sharePin='';
+  go('share');
+}
+function shareDocLabel(){return DOCS[state.docKey]?.title||'Dokument'}
+function shareScreen(){
+  const p=activePerson();if(!p)return noPerson('Daten weitergeben');
+  const docMode=state.shareScope==='document';
+  return `<section class="screen">${appTop('Daten weitergeben',docMode?shareDocLabel():personName(p))}<div class="content">
+    <div class="info-card"><div class="big-icon">↗</div><h2>${docMode?'Ausgefüllte Formulardaten teilen':'Personendaten teilen'}</h2>
+      <p>Die Empfängerin oder der Empfänger öffnet den Link in der PWA und kann die übertragenen Daten nach einer Vorschau lokal übernehmen.</p>
+    </div>
+    <div class="form-card"><h3>Was soll übertragen werden?</h3>
+      ${docMode
+        ? `<label class="checkline"><input type="checkbox" checked disabled> Stammdaten der Person</label>
+           <label class="checkline"><input type="checkbox" checked disabled> ${esc(shareDocLabel())} – ausgefüllte Felder und Status</label>
+           <label class="checkline"><input type="checkbox" id="shareContacts" checked> Vertrauens-/Kontaktpersonen</label>`
+        : `<label class="checkline"><input type="checkbox" id="shareProfile" checked> Stammdaten</label>
+           <label class="checkline"><input type="checkbox" id="shareContacts" checked> Vertrauens- und Notfallkontakte</label>
+           <label class="checkline"><input type="checkbox" id="shareDocuments" checked> Dokumentstatus und ausgefüllte Formulare</label>
+           <label class="checkline"><input type="checkbox" id="shareMedical"> Medizinische Angaben</label>
+           <label class="checkline"><input type="checkbox" id="shareBestattung" checked> Bestattungswünsche</label>
+           <label class="checkline"><input type="checkbox" id="shareDigital"> Digitaler Nachlass / Zugangshinweise</label>`}
+      <div class="small muted mt10">Fotos, Scans, hochgeladene PDFs und andere große Dateianhänge werden nicht in den Link eingebettet.</div>
+    </div>
+    <div class="form-card"><h3>Schutz des Freigabelinks</h3>
+      <label class="checkline"><input type="checkbox" id="shareEncrypted" checked onchange="toggleSharePin()"> Mit PIN verschlüsseln <b>(empfohlen)</b></label>
+      <div id="sharePinWrap">
+        <div class="two">${field('PIN (4–12 Zeichen)','sharePinInput',state.sharePin||'','password','PIN getrennt vom Link mitteilen.') }
+        <div class="field"><label>&nbsp;</label><button class="cta ghost full" type="button" onclick="generateSharePin()">PIN erzeugen</button></div></div>
+      </div>
+      <div class="notice"><b>Datenschutz:</b> Der Datenteil wird nach dem <code>#</code> im Link gespeichert und deshalb nicht an GitHub Pages übertragen. E-Mail-Anbieter und jede Person, die den vollständigen Link erhält, können ihn jedoch sehen. Mit PIN ist der Inhalt verschlüsselt; die PIN sollte über einen anderen Weg mitgeteilt werden.</div>
+    </div>
+    <button class="cta teal full" onclick="createShareLink()">Freigabelink erzeugen</button>
+    <div id="shareResult">${state.shareLink?shareResultHtml():''}</div>
+  </div></section>`;
+}
+function toggleSharePin(){
+  const w=document.getElementById('sharePinWrap'),on=checked('shareEncrypted');if(w)w.style.display=on?'block':'none';
+}
+function generateSharePin(){
+  const n=crypto.getRandomValues(new Uint32Array(1))[0]%1000000;
+  const pin=String(n).padStart(6,'0');state.sharePin=pin;setVal('sharePinInput',pin);
+}
+function stripAttachments(documents={}){
+  const out={};
+  for(const [k,v] of Object.entries(documents||{})){
+    if(!v||typeof v!=='object'){out[k]=v;continue}
+    const c={...v};delete c.attachments;out[k]=c;
+  }
+  return out;
+}
+function cleanContacts(list=[]){return list.map(c=>{const x={...c};delete x.dataUrl;return x})}
+function buildSharePayload(){
+  const p=activePerson(),docMode=state.shareScope==='document';
+  const person={relation:p.relation};
+  if(docMode){
+    person.profile={...(p.profile||{})};
+    person.contacts=checked('shareContacts')?cleanContacts(p.contacts||[]):[];
+    person.documents={};
+    const k=state.docKey||'vorsorge';
+    const d=p.documents?.[k]||{};
+    person.documents[k]={...d};delete person.documents[k].attachments;
+    if(k==='bestattung')person.bestattung={...(p.bestattung||{})};
+  }else{
+    if(checked('shareProfile'))person.profile={...(p.profile||{})};
+    if(checked('shareContacts'))person.contacts=cleanContacts(p.contacts||[]);
+    if(checked('shareDocuments'))person.documents=stripAttachments(p.documents||{});
+    if(checked('shareMedical'))person.medical={...(p.medical||{})};
+    person.zvr={...(p.zvr||{})};
+    if(checked('shareBestattung'))person.bestattung={...(p.bestattung||{})};
+    if(checked('shareDigital'))person.digital={...(p.digital||{})};
+  }
+  return {app:'Sterbefall Assistent Deutschland',shareVersion:1,createdAt:new Date().toISOString(),scope:state.shareScope,docKey:docMode?(state.docKey||'vorsorge'):null,person};
+}
+function bytesToB64u(bytes){
+  let s='';for(let i=0;i<bytes.length;i+=0x8000)s+=String.fromCharCode(...bytes.subarray(i,i+0x8000));
+  return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function b64uToBytes(s){
+  s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';
+  const b=atob(s),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;
+}
+async function compressShare(bytes){
+  if(typeof CompressionStream==='undefined')return {flag:'r',bytes};
+  try{
+    const cs=new CompressionStream('gzip'),w=cs.writable.getWriter();w.write(bytes);w.close();
+    return {flag:'g',bytes:new Uint8Array(await new Response(cs.readable).arrayBuffer())};
+  }catch(e){return {flag:'r',bytes}}
+}
+async function decompressShare(flag,bytes){
+  if(flag!=='g')return bytes;
+  if(typeof DecompressionStream==='undefined')throw new Error('Dieser Browser kann den komprimierten Link nicht öffnen.');
+  const ds=new DecompressionStream('gzip'),w=ds.writable.getWriter();w.write(bytes);w.close();
+  return new Uint8Array(await new Response(ds.readable).arrayBuffer());
+}
+async function deriveShareKey(pin,salt,usage){
+  const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(pin),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:150000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,[usage]);
+}
+async function encodeSharePayload(payload,pin=''){
+  const raw=new TextEncoder().encode(JSON.stringify(payload)),packed=await compressShare(raw);
+  if(!pin)return `p.${packed.flag}.${bytesToB64u(packed.bytes)}`;
+  const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));
+  const key=await deriveShareKey(pin,salt,'encrypt');
+  const encrypted=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,packed.bytes));
+  return `e.${packed.flag}.${bytesToB64u(salt)}.${bytesToB64u(iv)}.${bytesToB64u(encrypted)}`;
+}
+async function decodeShareToken(token,pin=''){
+  const parts=token.split('.');
+  if(parts[0]==='p'){
+    const bytes=await decompressShare(parts[1],b64uToBytes(parts.slice(2).join('.')));
+    return JSON.parse(new TextDecoder().decode(bytes));
+  }
+  if(parts[0]==='e'){
+    if(!pin)throw new Error('PIN_REQUIRED');
+    const flag=parts[1],salt=b64uToBytes(parts[2]),iv=b64uToBytes(parts[3]),cipher=b64uToBytes(parts[4]);
+    const key=await deriveShareKey(pin,salt,'decrypt');
+    let plain;
+    try{plain=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv},key,cipher))}
+    catch(e){throw new Error('PIN_FALSCH')}
+    plain=await decompressShare(flag,plain);
+    return JSON.parse(new TextDecoder().decode(plain));
+  }
+  throw new Error('Ungültiger Freigabelink');
+}
+function shareBaseUrl(){return `${location.origin}${location.pathname}`}
+async function createShareLink(){
+  const encrypted=checked('shareEncrypted'),pin=val('sharePinInput');
+  if(encrypted&&pin.length<4){toast('Bitte mindestens 4 Zeichen als PIN verwenden');return}
+  const btn=event?.currentTarget;if(btn){btn.disabled=true;btn.textContent='Link wird erstellt …'}
+  try{
+    const token=await encodeSharePayload(buildSharePayload(),encrypted?pin:'');
+    const link=`${shareBaseUrl()}#share=${token}`;
+    if(link.length>45000){toast('Die Datenmenge ist für einen Link zu groß. Bitte weniger Bereiche auswählen.');return}
+    state.shareLink=link;state.sharePin=encrypted?pin:'';
+    const r=document.getElementById('shareResult');if(r)r.innerHTML=shareResultHtml();
+  }catch(e){toast('Freigabelink konnte nicht erstellt werden')}
+  finally{if(btn){btn.disabled=false;btn.textContent='Freigabelink erzeugen'}}
+}
+function shareResultHtml(){
+  return `<div class="share-result mt16"><h3>Freigabelink fertig</h3>
+    <div class="share-link-box">${esc(state.shareLink)}</div>
+    ${state.sharePin?`<div class="pin-box"><span>PIN</span><b>${esc(state.sharePin)}</b><small>Bitte getrennt vom Link mitteilen.</small></div>`:''}
+    <div class="share-actions">
+      <button class="cta teal" onclick="emailShareLink()">✉ E-Mail erstellen</button>
+      <button class="cta ghost" onclick="nativeShareLink()">↗ Teilen</button>
+      <button class="cta ghost" onclick="copyShareLink()">Link kopieren</button>
+    </div>
+  </div>`;
+}
+function shareSubject(){const p=activePerson();return state.shareScope==='document'?`${shareDocLabel()} – Daten zur Übernahme`:`Vorsorgedaten von ${personName(p)}`}
+function shareBody(){
+  const pinNote=state.sharePin?'\n\nDie Daten sind mit einer PIN geschützt. Ich teile dir die PIN getrennt mit.':'';
+  return `Ich habe Daten im Sterbefall Assistent Deutschland für dich vorbereitet.\n\nÖffne diesen Link:\n${state.shareLink}${pinNote}\n\nDie Daten werden erst nach deiner Bestätigung lokal in der PWA gespeichert.`;
+}
+function emailShareLink(){
+  if(!state.shareLink){toast('Bitte zuerst einen Link erzeugen');return}
+  const href=`mailto:?subject=${encodeURIComponent(shareSubject())}&body=${encodeURIComponent(shareBody())}`;
+  location.href=href;
+}
+async function nativeShareLink(){
+  if(!state.shareLink){toast('Bitte zuerst einen Link erzeugen');return}
+  if(navigator.share){try{await navigator.share({title:shareSubject(),text:shareBody(),url:state.shareLink});return}catch(e){if(e?.name==='AbortError')return}}
+  copyShareLink();
+}
+async function copyShareLink(){
+  if(!state.shareLink)return;
+  try{await navigator.clipboard.writeText(state.shareLink);toast('Link kopiert')}catch(e){toast('Link konnte nicht kopiert werden')}
+}
+function setVal(id,v){const el=document.getElementById(id);if(el)el.value=v??''}
+async function detectSharedLink(){
+  const m=location.hash.match(/^#share=(.+)$/);if(!m)return false;
+  state.pendingShareToken=m[1];state.pendingShare=null;state.route='share-import';
+  if(m[1].startsWith('p.')){
+    try{state.pendingShare=await decodeShareToken(m[1],'')}catch(e){state.pendingShare={error:'Der Freigabelink konnte nicht gelesen werden.'}}
+  }
+  return true;
+}
+function sharedPersonName(payload){
+  const x=payload?.person?.profile||{};return [x.firstName,x.lastName].filter(Boolean).join(' ')||'Übertragene Person';
+}
+function sharedSummary(payload){
+  const p=payload?.person||{},docs=Object.keys(p.documents||{});
+  const rows=[];
+  if(p.profile)rows.push(['Stammdaten','enthalten']);
+  if(p.contacts?.length)rows.push(['Kontakte',`${p.contacts.length}`]);
+  if(docs.length)rows.push(['Dokumentdaten',docs.map(k=>DOCS[k]?.title||k).join(', ')]);
+  if(p.medical)rows.push(['Medizinische Angaben','enthalten']);
+  if(p.bestattung)rows.push(['Bestattungswünsche','enthalten']);
+  if(p.digital)rows.push(['Digitaler Nachlass','enthalten']);
+  return rows;
+}
+function shareImportScreen(){
+  const token=state.pendingShareToken||'',encrypted=token.startsWith('e.');
+  if(state.pendingShare?.error)return `<section class="screen">${appTop('Daten übernehmen')}<div class="content"><div class="notice">${esc(state.pendingShare.error)}</div><button class="cta ghost full" onclick="cancelSharedImport()">Zur App</button></div></section>`;
+  if(!state.pendingShare && encrypted)return `<section class="screen">${appTop('Geschützte Daten übernehmen')}<div class="content">
+    <div class="info-card"><div class="big-icon">🔐</div><h2>PIN erforderlich</h2><p>Der Link enthält verschlüsselte Vorsorgedaten. Die PIN sollte dir getrennt mitgeteilt worden sein.</p></div>
+    <div class="form-card">${field('PIN','importSharePin','','password')}<button class="cta teal full" onclick="unlockSharedImport()">Daten entschlüsseln</button></div>
+    <button class="cta ghost full" onclick="cancelSharedImport()">Abbrechen</button>
+  </div></section>`;
+  const d=state.pendingShare;if(!d)return '';
+  const rows=sharedSummary(d);
+  const match=findSharedPersonMatch(d.person);
+  return `<section class="screen">${appTop('Daten übernehmen','Vor dem Import prüfen')}<div class="content">
+    <div class="info-card"><div class="big-icon">📥</div><h2>${esc(sharedPersonName(d))}</h2><p>Diese Daten wurden über einen Freigabelink vorbereitet. Nichts wird automatisch übernommen.</p></div>
+    <div class="form-card"><h3>Enthalten</h3>${rows.map(([a,b])=>`<div class="summary-row"><span>${esc(a)}</span><b>${esc(b)}</b></div>`).join('')||'<p>Keine importierbaren Daten gefunden.</p>'}</div>
+    <div class="notice"><b>Keine Dateianhänge:</b> Fotos, Scans und hochgeladene PDFs werden über Freigabelinks nicht übertragen.</div>
+    ${match?`<button class="cta teal full" onclick="importSharedPerson('merge')">Daten zu ${esc(personName(match))} ergänzen</button><button class="cta ghost full mt10" onclick="importSharedPerson('new')">Trotzdem als neue Person anlegen</button>`:`<button class="cta teal full" onclick="importSharedPerson('new')">Als neue Person übernehmen</button>`}
+    <button class="cta ghost full mt10" onclick="cancelSharedImport()">Nicht übernehmen</button>
+  </div></section>`;
+}
+async function unlockSharedImport(){
+  const pin=val('importSharePin');if(!pin){toast('Bitte PIN eingeben');return}
+  try{state.pendingShare=await decodeShareToken(state.pendingShareToken,pin);render()}
+  catch(e){toast(e.message==='PIN_FALSCH'?'PIN ist falsch':'Daten konnten nicht entschlüsselt werden')}
+}
+function findSharedPersonMatch(sp){
+  const x=sp?.profile||{};if(!x.firstName&&!x.lastName)return null;
+  return state.persons.find(p=>{
+    const y=p.profile||{};
+    return (x.firstName||'').toLowerCase()===(y.firstName||'').toLowerCase() &&
+           (x.lastName||'').toLowerCase()===(y.lastName||'').toLowerCase() &&
+           (!x.birthDate||!y.birthDate||x.birthDate===y.birthDate);
+  })||null;
+}
+function deepMergeShared(target,source){
+  if(!source||typeof source!=='object')return target;
+  for(const [k,v] of Object.entries(source)){
+    if(v===undefined||v===null||v==='')continue;
+    if(Array.isArray(v)){target[k]=v.map(x=>typeof x==='object'?{...x,id:x.id||uid('item')}:x);continue}
+    if(typeof v==='object'){target[k]=deepMergeShared(target[k]&&typeof target[k]==='object'&&!Array.isArray(target[k])?target[k]:{},v);continue}
+    target[k]=v;
+  }
+  return target;
+}
+async function importSharedPerson(mode='new'){
+  const sp=state.pendingShare?.person;if(!sp){toast('Keine Daten vorhanden');return}
+  let p;
+  if(mode==='merge'){
+    p=findSharedPersonMatch(sp);if(!p){toast('Passende Person nicht mehr gefunden');return}
+    deepMergeShared(p,sp);
+  }else{
+    p=JSON.parse(JSON.stringify(sp));
+    p.id=uid('person');
+    p.contacts=(p.contacts||[]).map(c=>({...c,id:uid('contact')}));
+    p=normalizePerson(p);
+    state.persons.push(p);
+  }
+  state.activePersonId=p.id;await persistPersons();
+  history.replaceState(null,'',shareBaseUrl());
+  state.pendingShare=null;state.pendingShareToken=null;
+  toast('Daten lokal übernommen');go('vorsorge-person');
+}
+function cancelSharedImport(){
+  history.replaceState(null,'',shareBaseUrl());
+  state.pendingShare=null;state.pendingShareToken=null;go(state.persons.length?'home':'welcome');
+}
+
+function backup(){return `<section class="screen">${appTop('Datensicherung','Local-first bleibt nur sicher, wenn es ein Backup gibt')}<div class="content"><div class="info-card"><div class="big-icon">💾</div><h2>Lokales Backup</h2><p>Exportiere regelmäßig eine Sicherungsdatei. Sie enthält persönliche und möglicherweise sensible Daten.</p></div><button class="cta teal full" onclick="exportData()">Backup exportieren</button><button class="cta ghost full mt10" onclick="openShare('person')">↗ Aktive Person per Link weitergeben</button><div class="form-card mt16"><h3>Backup wiederherstellen</h3><div class="field"><label>JSON-Sicherungsdatei</label><input type="file" id="importFile" accept="application/json,.json"></div><button class="cta ghost full" onclick="importData()">Backup importieren</button></div><div class="notice"><b>Sicherheit:</b> Die exportierte Datei ist in dieser Version noch nicht verschlüsselt. Bewahre sie geschützt auf. Eine passwortgeschützte verschlüsselte Sicherung ist für die nächste Ausbaustufe vorgesehen.</div></div></section>`}
 function exportData(){const data={app:'Sterbefall Assistent Deutschland',version:6,exportedAt:new Date().toISOString(),persons:state.persons,cases:state.cases,settings:state.settings};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=`sterbefall-assistent-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);toast('Backup erstellt')}
 async function importData(){const f=document.getElementById('importFile')?.files?.[0];if(!f){toast('Bitte Backup-Datei auswählen');return}try{const data=JSON.parse(await f.text());if(!Array.isArray(data.persons))throw new Error('Ungültiges Backup');if(!confirm('Vorhandene lokale Daten durch dieses Backup ersetzen?'))return;state.persons=data.persons.map(normalizePerson);state.cases=Array.isArray(data.cases)?data.cases:[];state.settings=data.settings||state.settings;state.activePersonId=state.persons[0]?.id||null;await persistAll();toast('Backup wiederhergestellt');go('home')}catch(e){toast('Backup konnte nicht gelesen werden')}}
 
@@ -1078,8 +1340,8 @@ async function persistPersons(){state.persons=state.persons.map(normalizePerson)
 async function persistAll(){await persistPersons();await idbSet('cases','main',state.cases);await idbSet('settings','main',state.settings)}
 async function saveMeta(){await idbSet('meta','main',{activePersonId:state.activePersonId,dataVersion:6})}
 async function migrateLegacy(){let existing=await idbGet('persons','main');if(existing?.length){state.persons=existing.map(normalizePerson);return}const oldProfile=await idbGet('profile','main')||{},oldDocs=await idbGet('docs','main')||{};if(Object.keys(oldProfile).length||Object.keys(oldDocs).length){const p=normalizePerson({id:uid('person'),relation:'self',profile:{...oldProfile},documents:{...oldDocs},contacts:[]});if(oldProfile.emergencyName||oldProfile.emergencyPhone)p.contacts=[{id:uid('contact'),name:oldProfile.emergencyName||'',role:oldProfile.emergencyRelation||'',phone:oldProfile.emergencyPhone||'',isEmergency:true,isAgent:false}];delete p.profile.emergencyName;delete p.profile.emergencyRelation;delete p.profile.emergencyPhone;state.persons=[p];state.activePersonId=p.id;await persistPersons()}}
-async function init(){db=await openDB();await migrateLegacy();if(!state.persons.length)state.persons=(await idbGet('persons','main')||[]).map(normalizePerson);const meta=await idbGet('meta','main')||{};state.activePersonId=meta.activePersonId||state.activePersonId||state.persons[0]?.id||null;state.cases=await idbGet('cases','main')||[];state.settings=await idbGet('settings','main')||state.settings;render();if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{})}
+async function init(){db=await openDB();await migrateLegacy();if(!state.persons.length)state.persons=(await idbGet('persons','main')||[]).map(normalizePerson);const meta=await idbGet('meta','main')||{};state.activePersonId=meta.activePersonId||state.activePersonId||state.persons[0]?.id||null;state.cases=await idbGet('cases','main')||[];state.settings=await idbGet('settings','main')||state.settings;await detectSharedLink();render();if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{})}
 
 window.toggleFormHelp=toggleFormHelp;
-Object.assign(window,{go,back,newPerson,editPerson,selectPerson,deletePerson,savePersonBasic,saveProfile,addContact,removeContact,applyTrustedPerson,openDoc,saveDocumentDetail,addDocumentAttachments,viewDocumentAttachment,shareDocumentAttachment,removeDocumentAttachment,openOfficial,openOfficialPdf,openBundledBlank,fillOfficialPdfBundled,installTemplateFromFile,fillOfficialPdfFromWeb,fillOfficialPdfFromFile,applyFormContact,saveFilledForm,refreshFormPreview,printFilledForm,shareCurrentDocumentInfo,downloadLastPdf,shareLastPdf,saveMedical,saveZvr,saveBestattung,saveDigital,saveCase,toggleCaseTask,updatePreview,exportData,importData});
+Object.assign(window,{openShare,toggleSharePin,generateSharePin,createShareLink,emailShareLink,nativeShareLink,copyShareLink,unlockSharedImport,importSharedPerson,cancelSharedImport,go,back,newPerson,editPerson,selectPerson,deletePerson,savePersonBasic,saveProfile,addContact,removeContact,applyTrustedPerson,openDoc,saveDocumentDetail,addDocumentAttachments,viewDocumentAttachment,shareDocumentAttachment,removeDocumentAttachment,openOfficial,openOfficialPdf,openBundledBlank,fillOfficialPdfBundled,installTemplateFromFile,fillOfficialPdfFromWeb,fillOfficialPdfFromFile,applyFormContact,saveFilledForm,refreshFormPreview,printFilledForm,shareCurrentDocumentInfo,downloadLastPdf,shareLastPdf,saveMedical,saveZvr,saveBestattung,saveDigital,saveCase,toggleCaseTask,updatePreview,exportData,importData});
 window.addEventListener('DOMContentLoaded',init);

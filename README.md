@@ -1,3 +1,16 @@
+# Sterbefall Assistent Deutschland v0.8.4
+
+Neu: Daten an Angehörige weitergeben.
+
+- Personendaten oder ein ausgefülltes Dokument können als Freigabelink übertragen werden.
+- Der Link öffnet direkt die PWA und zeigt vor dem Import eine Vorschau.
+- Bestehende passende Personen können ergänzt oder Daten als neue Person übernommen werden.
+- Standardmäßig kann der Link mit einer PIN per AES-GCM verschlüsselt werden.
+- Die PIN wird nicht in den Link eingebettet und sollte getrennt übermittelt werden.
+- Der Datenteil liegt im URL-Fragment (`#share=...`) und wird dadurch nicht an GitHub Pages gesendet.
+- Fotos, Scans, PDF-Anhänge und andere große Binärdateien werden bewusst nicht in Freigabelinks aufgenommen.
+- E-Mail, System-Teilen und Link-kopieren werden unterstützt.
+
 # Sterbefall Assistent Deutschland v0.8.3
 
 Neu: Verständnishilfe direkt in den Dokumentformularen.

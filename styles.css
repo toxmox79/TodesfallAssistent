@@ -120,3 +120,21 @@
   .help-btn{width:26px;height:26px;min-width:26px}
   .field-help{font-size:12.5px}
 }
+
+/* v0.8.4 – Datenfreigabe per Link */
+.share-result{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px}
+.share-link-box{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11px;line-height:1.4;word-break:break-all;background:#f6f7f8;border-radius:12px;padding:12px;max-height:125px;overflow:auto}
+.pin-box{display:flex;align-items:center;gap:12px;margin:12px 0;padding:12px 14px;border-radius:14px;background:#fff5c9}
+.pin-box span{font-size:11px;font-weight:800;text-transform:uppercase}
+.pin-box b{font-size:21px;letter-spacing:.12em}
+.pin-box small{margin-left:auto;color:var(--muted)}
+.share-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.summary-row{display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px solid var(--line)}
+.summary-row:last-child{border-bottom:0}
+.summary-row span{color:var(--muted)}
+.summary-row b{text-align:right}
+@media(max-width:540px){
+  .share-actions{grid-template-columns:1fr}
+  .pin-box{align-items:flex-start;flex-wrap:wrap}
+  .pin-box small{width:100%;margin-left:0}
+}
