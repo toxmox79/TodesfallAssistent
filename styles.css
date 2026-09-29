@@ -138,3 +138,19 @@
   .pin-box{align-items:flex-start;flex-wrap:wrap}
   .pin-box small{width:100%;margin-left:0}
 }
+
+/* v0.8.5 – rechtliche Hinweise */
+.legal-info-card{background:#fff;border:1px solid #d9e1e5;border-radius:18px;padding:15px;margin:12px 0 16px;box-shadow:0 5px 16px rgba(24,39,56,.035)}
+.legal-info-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.legal-info-icon{width:36px;height:36px;border-radius:12px;background:#eef5f8;display:grid;place-items:center;font-size:19px}
+.legal-info-head b{display:block;font-size:15px}
+.legal-info-head small{display:block;color:var(--muted);margin-top:2px}
+.legal-info-row{display:grid;grid-template-columns:115px 1fr;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.legal-info-row span{font-size:12px;font-weight:800;color:var(--teal-dark)}
+.legal-info-row p{margin:0;font-size:13px;line-height:1.48;color:#3f4b50}
+.legal-mini{display:inline-block;margin-top:5px;padding:3px 7px;border-radius:999px;background:#eef5f8;color:#49636d;font-size:10px;font-weight:800}
+.internal-rule-card{border:1px solid #f0d876;background:#fffdf3}
+.internal-rule-card .notice{margin-top:12px}
+@media(max-width:520px){
+  .legal-info-row{grid-template-columns:1fr;gap:3px}
+}

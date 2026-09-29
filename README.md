@@ -1,3 +1,20 @@
+# Sterbefall Assistent Deutschland v0.8.5
+
+Neu: Rechtliche Hinweise direkt an den Vorsorgedokumenten.
+
+Bei Vorsorgevollmacht, Patientenverfügung, Betreuungsverfügung, Bankvollmacht,
+Schweigepflichtentbindung, Bestattungswünschen, Organspende und Testament wird jetzt erklärt:
+
+- wann das Dokument rechtlich/praktisch relevant wird,
+- was besonders zu beachten ist,
+- welche Formanforderungen typischerweise gelten,
+- bei den wichtigsten Dokumenten mit Link zur offiziellen Quelle.
+
+Zusätzlich enthält die Vorsorgevollmacht eine **interne Nutzungsregel**:
+sofort / erst bei eigener Handlungsunfähigkeit / nur auf ausdrückliche Aufforderung / eigene Vereinbarung.
+Diese Regel bleibt bewusst in der App und wird nicht in die Vollmachtsurkunde gedruckt, weil die Vollmacht
+im Außenverhältnis grundsätzlich ab Ausstellung wirksam bleibt.
+
 # Sterbefall Assistent Deutschland v0.8.4
 
 Neu: Daten an Angehörige weitergeben.
